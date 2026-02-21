@@ -1,0 +1,10 @@
+dataset:
+  random_state: 42
+  n_samples: 3000
+
+model:
+  max_features_tfidf: 3000
+  c: 2.0
+
+output:
+  artifact_path: reports/artifacts/model_bundle.joblib

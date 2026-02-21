@@ -1,0 +1,10 @@
+score_thresholds:
+  review: 0.45
+  block: 0.75
+
+hard_rules:
+  max_payment_attempts: 5
+  min_account_age_days: 2
+
+monitoring:
+  score_shift_alert: 0.15
