@@ -14,7 +14,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 from trustshield.features import build_graph_stats, enrich_with_graph_features
 from trustshield.ingestion import generate_synthetic_events
-from trustshield.preprocessing import normalize_text
+from trustshield.preprocessing import normalize_text, validate_events
 
 
 def _load_training_config(config_path: Path) -> dict:
@@ -28,6 +28,34 @@ def _recall_at_precision(y_true: np.ndarray, y_score: np.ndarray, target_precisi
     return float(valid.max()) if len(valid) else 0.0
 
 
+def _maybe_log_mlflow(cfg: dict, metrics: dict[str, float], artifact_path: Path) -> None:
+    mlflow_cfg = cfg.get("mlflow", {})
+    if not mlflow_cfg.get("enabled", True):
+        return
+    try:
+        import mlflow
+    except Exception:
+        print("MLflow is not installed or unavailable. Skipping MLflow logging.")
+        return
+
+    tracking_uri = mlflow_cfg.get("tracking_uri", "file:./mlruns")
+    experiment_name = mlflow_cfg.get("experiment_name", "trustshield")
+    mlflow.set_tracking_uri(tracking_uri)
+    mlflow.set_experiment(experiment_name)
+    with mlflow.start_run(run_name="train_ensemble"):
+        mlflow.log_params(
+            {
+                "n_samples": cfg["dataset"]["n_samples"],
+                "random_state": cfg["dataset"]["random_state"],
+                "max_features_tfidf": cfg["model"]["max_features_tfidf"],
+                "logreg_c": cfg["model"]["c"],
+            }
+        )
+        mlflow.log_metrics(metrics)
+        if artifact_path.exists():
+            mlflow.log_artifact(str(artifact_path))
+
+
 def train() -> dict:
     cfg = _load_training_config(Path("configs/training.yaml"))
     n_samples = int(cfg["dataset"]["n_samples"])
@@ -37,6 +65,7 @@ def train() -> dict:
 
     df = generate_synthetic_events(n_samples=n_samples, random_state=random_state)
     df["message_text"] = df["message_text"].map(normalize_text)
+    validate_events(df)
 
     x_train, x_test, y_train, y_test = train_test_split(
         df.drop(columns=["is_fraud", "event_id"]),
@@ -127,6 +156,11 @@ def train() -> dict:
 
     print(f"Saved model bundle to {artifact_path}")
     print(f"PR-AUC: {pr_auc:.4f} | Recall@P>=0.90: {recall_at_90p:.4f}")
+    _maybe_log_mlflow(
+        cfg,
+        {"pr_auc": float(pr_auc), "recall_at_precision_0_90": float(recall_at_90p)},
+        artifact_path,
+    )
 
     return bundle
 

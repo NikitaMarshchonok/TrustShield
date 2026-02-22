@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
 import joblib
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 
 from trustshield.models import explain_event
 from trustshield.serving.policy import decide, load_policy
@@ -44,6 +46,25 @@ def health() -> dict[str, Any]:
         "model_loaded": bundle is not None,
         "policy_loaded": bool(policy_cfg),
     }
+
+
+@app.get("/monitoring/summary")
+def monitoring_summary() -> dict[str, Any]:
+    report_path = Path("reports/monitoring.json")
+    if not report_path.exists():
+        return {"status": "missing", "message": "Run `make monitor` to generate report."}
+    return {"status": "ok", "report": json.loads(report_path.read_text(encoding="utf-8"))}
+
+
+@app.get("/monitoring/dashboard", response_class=HTMLResponse)
+def monitoring_dashboard() -> HTMLResponse:
+    dashboard_path = Path("reports/dashboard.html")
+    if not dashboard_path.exists():
+        return HTMLResponse(
+            content="<h3>Dashboard missing. Run `make dashboard` first.</h3>",
+            status_code=404,
+        )
+    return HTMLResponse(content=dashboard_path.read_text(encoding="utf-8"), status_code=200)
 
 
 @app.post("/predict", response_model=PredictResponse)

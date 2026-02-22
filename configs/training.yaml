@@ -8,3 +8,8 @@ model:
 
 output:
   artifact_path: reports/artifacts/model_bundle.joblib
+
+mlflow:
+  enabled: true
+  tracking_uri: file:./mlruns
+  experiment_name: trustshield

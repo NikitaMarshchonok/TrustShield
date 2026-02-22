@@ -1,11 +1,11 @@
 # TrustShield
 
 TrustShield is an end-to-end scam/fraud detection project for marketplace-like messaging and transaction flows.
-It demonstrates text modeling, tabular risk features, policy-based decisions, and production-oriented ML engineering.
+It demonstrates text modeling, tabular + graph-derived risk features, policy-based decisions, and production-oriented ML engineering.
 
 ## MVP Scope
 
-- Train a text + tabular fraud model on synthetic/semi-synthetic events
+- Train an ensemble fraud model (`text + tabular + graph-derived` features)
 - Serve predictions through FastAPI
 - Return:
   - `risk_score` (0..1)
@@ -68,11 +68,21 @@ Open Swagger at `http://127.0.0.1:8000/docs`.
 make test
 ```
 
+### 5) Generate Monitoring + Error Analysis
+
+```bash
+make monitor
+make error-analysis
+make dashboard
+```
+
 ## API
 
 - `GET /health` - service health and model loading status
 - `POST /predict` - risk score, reasons, decision
 - `POST /explain` - explanation-focused output
+- `GET /monitoring/summary` - latest drift/quality/latency report
+- `GET /monitoring/dashboard` - rendered local HTML dashboard
 
 ## Policy Engine
 
@@ -86,11 +96,13 @@ Thresholds are in `configs/policy.yaml`.
 
 ## Monitoring (MVP)
 
-MVP includes a lightweight monitoring report generator:
+Monitoring includes a lightweight report generator:
 
 - score distribution summary
-- positive-rate shift check
-- alert if shift exceeds threshold
+- feature shift checks
+- quality check (`PR-AUC` baseline vs recent)
+- inference latency budget (`p95` in ms)
+- alert if thresholds are exceeded
 
 Run:
 
@@ -98,9 +110,30 @@ Run:
 make monitor
 ```
 
+## Error Analysis
+
+Generate top false positives/false negatives report:
+
+```bash
+make error-analysis
+```
+
+Output: `reports/error_analysis.json`
+
+## Validation and Tracking
+
+- Schema validation via `pandera` (with safe fallback checks if unavailable)
+- MLflow run logging for training metrics and artifacts (`file:./mlruns` by default)
+
+Commands:
+
+```bash
+make validate
+make train
+```
+
 ## Next Iterations
 
-- Graph features (`degree`, `pagerank`, connected components, node embeddings)
-- PR-AUC + Recall@FixedPrecision + cost-based evaluation dashboard
-- MLflow experiment tracking and model registry
-- Drift/quality dashboard with Evidently
+- Upgrade graph block to full graph algorithms (`pagerank`, components, node2vec embeddings)
+- Add SHAP + richer text explanations in `/explain`
+- Integrate Evidently dashboards and alert routing

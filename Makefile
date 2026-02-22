@@ -1,4 +1,4 @@
-.PHONY: install train serve test lint monitor
+.PHONY: install train serve test lint monitor validate error-analysis dashboard
 
 install:
 	pip install -e ".[dev]"
@@ -17,3 +17,12 @@ lint:
 
 monitor:
 	python -m trustshield.monitoring.report
+
+validate:
+	python -m trustshield.tools.validate_data
+
+error-analysis:
+	python -m trustshield.evaluation.error_analysis
+
+dashboard:
+	python -m trustshield.monitoring.dashboard

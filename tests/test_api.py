@@ -13,6 +13,18 @@ def test_health() -> None:
     assert body["status"] == "ok"
 
 
+def test_monitoring_summary_missing_report() -> None:
+    response = client.get("/monitoring/summary")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] in {"ok", "missing"}
+
+
+def test_monitoring_dashboard_endpoint() -> None:
+    response = client.get("/monitoring/dashboard")
+    assert response.status_code in {200, 404}
+
+
 def test_predict() -> None:
     payload = {
         "message_text": "Urgent transfer, click this link now",

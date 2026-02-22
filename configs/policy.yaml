@@ -8,3 +8,5 @@ hard_rules:
 
 monitoring:
   score_shift_alert: 0.15
+  quality_drop_ratio_alert: 0.85
+  latency_p95_ms_alert: 25.0
