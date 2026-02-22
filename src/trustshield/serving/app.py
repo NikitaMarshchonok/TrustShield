@@ -74,14 +74,17 @@ def predict(req: PredictRequest) -> PredictResponse:
         model_output = explain_event(bundle, payload)
         score = model_output["risk_score"]
         model_reasons = model_output["model_reasons"]
+        feature_contributions = model_output["feature_contributions"]
         components = {
             "text_score": round(float(model_output["text_score"]), 4),
             "tabular_score": round(float(model_output["tabular_score"]), 4),
             "graph_max_entity_fraud_rate": round(float(model_output["graph_max_entity_fraud_rate"]), 4),
+            "graph_max_entity_pagerank": round(float(model_output["graph_max_entity_pagerank"]), 8),
         }
     else:
         score = fallback.predict(payload)
         model_reasons = []
+        feature_contributions = {}
         components = {"text_score": round(score, 4), "tabular_score": round(score, 4)}
     decision, reasons = decide(score, payload, policy_cfg)
     return PredictResponse(
@@ -90,6 +93,7 @@ def predict(req: PredictRequest) -> PredictResponse:
         reasons=reasons,
         model_reasons=model_reasons,
         components=components,
+        feature_contributions=feature_contributions,
     )
 
 

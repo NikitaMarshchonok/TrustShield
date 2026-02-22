@@ -23,3 +23,4 @@ class PredictResponse(BaseModel):
     reasons: list[str]
     model_reasons: list[str] = Field(default_factory=list)
     components: dict[str, float] = Field(default_factory=dict)
+    feature_contributions: dict[str, float] = Field(default_factory=dict)

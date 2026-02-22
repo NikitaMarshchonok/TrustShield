@@ -79,8 +79,8 @@ make dashboard
 ## API
 
 - `GET /health` - service health and model loading status
-- `POST /predict` - risk score, reasons, decision
-- `POST /explain` - explanation-focused output
+- `POST /predict` - risk score, reasons, decision, score components
+- `POST /explain` - explanation-focused output with top feature contributions
 - `GET /monitoring/summary` - latest drift/quality/latency report
 - `GET /monitoring/dashboard` - rendered local HTML dashboard
 
@@ -134,6 +134,6 @@ make train
 
 ## Next Iterations
 
-- Upgrade graph block to full graph algorithms (`pagerank`, components, node2vec embeddings)
+- Add node2vec embeddings on top of current graph metrics (`degree`, `pagerank`, components)
 - Add SHAP + richer text explanations in `/explain`
 - Integrate Evidently dashboards and alert routing

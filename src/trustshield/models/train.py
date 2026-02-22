@@ -99,14 +99,24 @@ def train() -> dict:
         "graph_device_id_degree",
         "graph_ip_id_degree",
         "graph_card_id_degree",
+        "graph_device_id_pagerank",
+        "graph_ip_id_pagerank",
+        "graph_card_id_pagerank",
+        "graph_device_id_component_size",
+        "graph_ip_id_component_size",
+        "graph_card_id_component_size",
         "graph_max_entity_fraud_rate",
         "graph_mean_entity_degree",
+        "graph_max_entity_pagerank",
+        "graph_min_component_size",
     ]
     x_num_train = x_train[num_cols].to_numpy(dtype=float)
     x_num_test = x_test[num_cols].to_numpy(dtype=float)
 
     x_train_all = np.hstack([x_country_train, x_num_train])
     x_test_all = np.hstack([x_country_test, x_num_test])
+    country_feature_names = [str(name) for name in country_encoder.get_feature_names_out(["country"])]
+    tabular_feature_names = country_feature_names + num_cols
 
     tabular_model = LogisticRegression(C=c, max_iter=1000, n_jobs=None)
     tabular_model.fit(pd.DataFrame(x_train_all), y_train)
@@ -134,6 +144,7 @@ def train() -> dict:
         "graph_stats": graph_stats,
         "ensemble_weights": ensemble_weights,
         "top_ngrams": top_ngrams,
+        "tabular_feature_names": tabular_feature_names,
         "metrics": {
             "pr_auc": float(pr_auc),
             "recall_at_precision_0_90": float(recall_at_90p),

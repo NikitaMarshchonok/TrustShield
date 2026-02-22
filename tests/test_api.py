@@ -44,6 +44,7 @@ def test_predict() -> None:
     assert body["decision"] in {"allow", "review", "block"}
     assert isinstance(body["reasons"], list)
     assert isinstance(body["components"], dict)
+    assert isinstance(body["feature_contributions"], dict)
 
 
 def test_explain() -> None:
@@ -63,3 +64,4 @@ def test_explain() -> None:
     body = response.json()
     assert "text_score" in body["components"]
     assert "tabular_score" in body["components"]
+    assert "feature_contributions" in body

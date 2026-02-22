@@ -17,6 +17,7 @@ def explain_event(model_bundle: dict[str, Any], payload: dict[str, Any]) -> dict
     graph_stats = model_bundle["graph_stats"]
     weights = model_bundle["ensemble_weights"]
     top_ngrams = set(model_bundle.get("top_ngrams", []))
+    tabular_feature_names = model_bundle.get("tabular_feature_names", [])
 
     text = normalize_text(str(payload.get("message_text", "")))
     country = str(payload.get("country", "UNK")).upper()
@@ -39,8 +40,16 @@ def explain_event(model_bundle: dict[str, Any], payload: dict[str, Any]) -> dict
                 graph_features["graph_device_id_degree"],
                 graph_features["graph_ip_id_degree"],
                 graph_features["graph_card_id_degree"],
+                graph_features["graph_device_id_pagerank"],
+                graph_features["graph_ip_id_pagerank"],
+                graph_features["graph_card_id_pagerank"],
+                graph_features["graph_device_id_component_size"],
+                graph_features["graph_ip_id_component_size"],
+                graph_features["graph_card_id_component_size"],
                 graph_features["graph_max_entity_fraud_rate"],
                 graph_features["graph_mean_entity_degree"],
+                graph_features["graph_max_entity_pagerank"],
+                graph_features["graph_min_component_size"],
             ]
         ],
         dtype=float,
@@ -54,13 +63,24 @@ def explain_event(model_bundle: dict[str, Any], payload: dict[str, Any]) -> dict
 
     message_tokens = set(text.split())
     model_reasons = sorted(ng for ng in top_ngrams if ng in message_tokens)[:5]
+    feature_contributions: dict[str, float] = {}
+    if tabular_feature_names:
+        coef = tabular_model.coef_[0]
+        contrib_values = tabular_features[0] * coef
+        raw_contrib = {
+            tabular_feature_names[i]: float(contrib_values[i]) for i in range(min(len(tabular_feature_names), len(coef)))
+        }
+        top_items = sorted(raw_contrib.items(), key=lambda kv: abs(kv[1]), reverse=True)[:6]
+        feature_contributions = {name: round(value, 4) for name, value in top_items}
 
     return {
         "risk_score": risk_score,
         "text_score": text_score,
         "tabular_score": tabular_score,
         "graph_max_entity_fraud_rate": graph_features["graph_max_entity_fraud_rate"],
+        "graph_max_entity_pagerank": graph_features["graph_max_entity_pagerank"],
         "model_reasons": model_reasons,
+        "feature_contributions": feature_contributions,
     }
 
 
