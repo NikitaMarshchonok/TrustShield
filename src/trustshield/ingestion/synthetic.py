@@ -42,6 +42,16 @@ def generate_synthetic_events(n_samples: int = 3000, random_state: int = 42) -> 
     rnd = random.Random(random_state)
     np.random.seed(random_state)
 
+    users = [f"user_{i:04d}" for i in range(1200)]
+    merchants = [f"merchant_{i:03d}" for i in range(120)]
+    devices = [f"device_{i:04d}" for i in range(900)]
+    ips = [f"ip_{i:04d}" for i in range(1100)]
+    cards = [f"card_{i:04d}" for i in range(1500)]
+
+    hot_devices = devices[:70]
+    hot_ips = ips[:80]
+    hot_cards = cards[:120]
+
     rows = []
     for idx in range(n_samples):
         latent_risk = np.clip(np.random.beta(2.0, 5.0) + np.random.normal(0.0, 0.08), 0, 1)
@@ -52,6 +62,11 @@ def generate_synthetic_events(n_samples: int = 3000, random_state: int = 42) -> 
         device_reuse_count = int(np.random.poisson(1.5 + latent_risk * 4.0))
         chargeback_history = int(np.random.rand() < (0.06 + 0.4 * latent_risk))
         message = _sample_message(risky_message, rnd)
+        user_id = rnd.choice(users)
+        merchant_id = rnd.choice(merchants)
+        device_id = rnd.choice(hot_devices if latent_risk > 0.65 else devices)
+        ip_id = rnd.choice(hot_ips if latent_risk > 0.58 else ips)
+        card_id = rnd.choice(hot_cards if latent_risk > 0.62 else cards)
 
         risk_boost = 0.0
         risk_boost += 0.16 if country in HIGH_RISK_COUNTRIES else 0.0
@@ -69,6 +84,11 @@ def generate_synthetic_events(n_samples: int = 3000, random_state: int = 42) -> 
                 "event_id": idx,
                 "message_text": message,
                 "country": country,
+                "user_id": user_id,
+                "device_id": device_id,
+                "ip_id": ip_id,
+                "card_id": card_id,
+                "merchant_id": merchant_id,
                 "payment_attempts": payment_attempts,
                 "account_age_days": account_age_days,
                 "device_reuse_count": device_reuse_count,

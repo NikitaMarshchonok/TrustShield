@@ -17,6 +17,9 @@ def test_predict() -> None:
     payload = {
         "message_text": "Urgent transfer, click this link now",
         "country": "NG",
+        "device_id": "device_0001",
+        "ip_id": "ip_0001",
+        "card_id": "card_0001",
         "payment_attempts": 5,
         "account_age_days": 1,
         "device_reuse_count": 5,
@@ -28,3 +31,23 @@ def test_predict() -> None:
     assert 0 <= body["risk_score"] <= 1
     assert body["decision"] in {"allow", "review", "block"}
     assert isinstance(body["reasons"], list)
+    assert isinstance(body["components"], dict)
+
+
+def test_explain() -> None:
+    payload = {
+        "message_text": "Please click and send otp urgently",
+        "country": "RU",
+        "device_id": "device_0002",
+        "ip_id": "ip_0002",
+        "card_id": "card_0002",
+        "payment_attempts": 4,
+        "account_age_days": 2,
+        "device_reuse_count": 4,
+        "chargeback_history": 1,
+    }
+    response = client.post("/explain", json=payload)
+    assert response.status_code == 200
+    body = response.json()
+    assert "text_score" in body["components"]
+    assert "tabular_score" in body["components"]

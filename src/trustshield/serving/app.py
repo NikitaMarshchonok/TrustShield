@@ -6,7 +6,7 @@ from typing import Any
 import joblib
 from fastapi import FastAPI
 
-from trustshield.models import score_event
+from trustshield.models import explain_event
 from trustshield.serving.policy import decide, load_policy
 from trustshield.serving.schemas import PredictRequest, PredictResponse
 
@@ -50,11 +50,26 @@ def health() -> dict[str, Any]:
 def predict(req: PredictRequest) -> PredictResponse:
     payload = req.model_dump()
     if bundle is not None:
-        score = score_event(bundle, payload)
+        model_output = explain_event(bundle, payload)
+        score = model_output["risk_score"]
+        model_reasons = model_output["model_reasons"]
+        components = {
+            "text_score": round(float(model_output["text_score"]), 4),
+            "tabular_score": round(float(model_output["tabular_score"]), 4),
+            "graph_max_entity_fraud_rate": round(float(model_output["graph_max_entity_fraud_rate"]), 4),
+        }
     else:
         score = fallback.predict(payload)
+        model_reasons = []
+        components = {"text_score": round(score, 4), "tabular_score": round(score, 4)}
     decision, reasons = decide(score, payload, policy_cfg)
-    return PredictResponse(risk_score=round(score, 4), decision=decision, reasons=reasons)
+    return PredictResponse(
+        risk_score=round(score, 4),
+        decision=decision,
+        reasons=reasons,
+        model_reasons=model_reasons,
+        components=components,
+    )
 
 
 @app.post("/explain", response_model=PredictResponse)

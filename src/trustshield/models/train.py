@@ -12,6 +12,7 @@ from sklearn.metrics import average_precision_score, precision_recall_curve
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
 
+from trustshield.features import build_graph_stats, enrich_with_graph_features
 from trustshield.ingestion import generate_synthetic_events
 from trustshield.preprocessing import normalize_text
 
@@ -45,35 +46,65 @@ def train() -> dict:
         stratify=df["is_fraud"],
     )
 
+    train_df_with_target = x_train.copy()
+    train_df_with_target["is_fraud"] = y_train.to_numpy()
+    graph_stats = build_graph_stats(train_df_with_target, target_col="is_fraud")
+    x_train = enrich_with_graph_features(x_train, graph_stats)
+    x_test = enrich_with_graph_features(x_test, graph_stats)
+
     text_vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_features=max_features_tfidf)
     x_text_train = text_vectorizer.fit_transform(x_train["message_text"]).toarray()
     x_text_test = text_vectorizer.transform(x_test["message_text"]).toarray()
+    text_model = LogisticRegression(C=c, max_iter=1000, n_jobs=None)
+    text_model.fit(pd.DataFrame(x_text_train), y_train)
 
     country_encoder = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
     x_country_train = country_encoder.fit_transform(x_train[["country"]])
     x_country_test = country_encoder.transform(x_test[["country"]])
 
-    num_cols = ["payment_attempts", "account_age_days", "device_reuse_count", "chargeback_history"]
+    num_cols = [
+        "payment_attempts",
+        "account_age_days",
+        "device_reuse_count",
+        "chargeback_history",
+        "graph_device_id_degree",
+        "graph_ip_id_degree",
+        "graph_card_id_degree",
+        "graph_max_entity_fraud_rate",
+        "graph_mean_entity_degree",
+    ]
     x_num_train = x_train[num_cols].to_numpy(dtype=float)
     x_num_test = x_test[num_cols].to_numpy(dtype=float)
 
-    x_train_all = np.hstack([x_text_train, x_country_train, x_num_train])
-    x_test_all = np.hstack([x_text_test, x_country_test, x_num_test])
+    x_train_all = np.hstack([x_country_train, x_num_train])
+    x_test_all = np.hstack([x_country_test, x_num_test])
 
-    model = LogisticRegression(C=c, max_iter=1000, n_jobs=None)
-    model.fit(pd.DataFrame(x_train_all), y_train)
+    tabular_model = LogisticRegression(C=c, max_iter=1000, n_jobs=None)
+    tabular_model.fit(pd.DataFrame(x_train_all), y_train)
 
-    y_score = model.predict_proba(pd.DataFrame(x_test_all))[:, 1]
+    y_score_text = text_model.predict_proba(pd.DataFrame(x_text_test))[:, 1]
+    y_score_tabular = tabular_model.predict_proba(pd.DataFrame(x_test_all))[:, 1]
+    ensemble_weights = {"text": 0.45, "tabular": 0.55}
+    y_score = ensemble_weights["text"] * y_score_text + ensemble_weights["tabular"] * y_score_tabular
     pr_auc = average_precision_score(y_test, y_score)
     recall_at_90p = _recall_at_precision(y_test.to_numpy(), y_score, target_precision=0.9)
 
     artifact_path = Path(cfg["output"]["artifact_path"])
     artifact_path.parent.mkdir(parents=True, exist_ok=True)
 
+    ngram_names = np.array(text_vectorizer.get_feature_names_out())
+    text_coef = text_model.coef_[0]
+    top_idx = np.argsort(text_coef)[-20:]
+    top_ngrams = [str(ngram_names[i]) for i in top_idx]
+
     bundle = {
-        "model": model,
+        "text_model": text_model,
+        "tabular_model": tabular_model,
         "text_vectorizer": text_vectorizer,
         "country_encoder": country_encoder,
+        "graph_stats": graph_stats,
+        "ensemble_weights": ensemble_weights,
+        "top_ngrams": top_ngrams,
         "metrics": {
             "pr_auc": float(pr_auc),
             "recall_at_precision_0_90": float(recall_at_90p),
