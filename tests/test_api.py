@@ -25,6 +25,12 @@ def test_monitoring_dashboard_endpoint() -> None:
     assert response.status_code in {200, 404}
 
 
+def test_policy_reset_endpoint() -> None:
+    response = client.post("/policy/reset")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+
 def test_predict() -> None:
     payload = {
         "message_text": "Urgent transfer, click this link now",
@@ -45,6 +51,7 @@ def test_predict() -> None:
     assert isinstance(body["reasons"], list)
     assert isinstance(body["components"], dict)
     assert isinstance(body["feature_contributions"], dict)
+    assert isinstance(body["policy_triggers"], list)
 
 
 def test_explain() -> None:

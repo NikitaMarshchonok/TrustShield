@@ -11,6 +11,7 @@ class PredictRequest(BaseModel):
     ip_id: str = Field(default="unknown_ip")
     card_id: str = Field(default="unknown_card")
     merchant_id: str = Field(default="unknown_merchant")
+    event_ts: float | None = Field(default=None)
     payment_attempts: int = Field(default=1, ge=0)
     account_age_days: int = Field(default=30, ge=0)
     device_reuse_count: int = Field(default=1, ge=0)
@@ -24,3 +25,4 @@ class PredictResponse(BaseModel):
     model_reasons: list[str] = Field(default_factory=list)
     components: dict[str, float] = Field(default_factory=dict)
     feature_contributions: dict[str, float] = Field(default_factory=dict)
+    policy_triggers: list[str] = Field(default_factory=list)

@@ -74,6 +74,7 @@ make test
 make monitor
 make error-analysis
 make dashboard
+make policy-sim
 ```
 
 ## API
@@ -83,14 +84,16 @@ make dashboard
 - `POST /explain` - explanation-focused output with top feature contributions
 - `GET /monitoring/summary` - latest drift/quality/latency report
 - `GET /monitoring/dashboard` - rendered local HTML dashboard
+- `POST /policy/reset` - reset in-memory policy counters
 
 ## Policy Engine
 
-Decision policy combines model score and deterministic risk rules:
+Decision policy combines model score, deterministic risk rules, and stateful rate-limits:
 
 - `block`: score above block threshold or hard rule violation
 - `review`: medium score or suspicious pattern
 - `allow`: low score and no suspicious pattern
+- rolling-window triggers for `user_id`, `device_id`, `ip_id`
 
 Thresholds are in `configs/policy.yaml`.
 
@@ -119,6 +122,16 @@ make error-analysis
 ```
 
 Output: `reports/error_analysis.json`
+
+## Policy Simulation
+
+Simulate policy decisions on a stream of events:
+
+```bash
+make policy-sim
+```
+
+Output: `reports/policy_simulation.json`
 
 ## Validation and Tracking
 

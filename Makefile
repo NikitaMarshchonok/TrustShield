@@ -1,4 +1,4 @@
-.PHONY: install train serve test lint monitor validate error-analysis dashboard
+.PHONY: install train serve test lint monitor validate error-analysis dashboard policy-sim
 
 install:
 	pip install -e ".[dev]"
@@ -26,3 +26,6 @@ error-analysis:
 
 dashboard:
 	python -m trustshield.monitoring.dashboard
+
+policy-sim:
+	python -m trustshield.evaluation.policy_simulation

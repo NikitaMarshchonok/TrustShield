@@ -6,6 +6,15 @@ hard_rules:
   max_payment_attempts: 5
   min_account_age_days: 2
 
+rate_limits:
+  window_seconds: 300
+  user_review_events: 4
+  user_block_events: 7
+  device_review_events: 3
+  device_block_events: 5
+  ip_review_events: 5
+  ip_block_events: 9
+
 monitoring:
   score_shift_alert: 0.15
   quality_drop_ratio_alert: 0.85

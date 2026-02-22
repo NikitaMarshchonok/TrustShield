@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
 from trustshield.models import explain_event
-from trustshield.serving.policy import decide, load_policy
+from trustshield.serving.policy import decide, init_policy_state, load_policy, reset_policy_state
 from trustshield.serving.schemas import PredictRequest, PredictResponse
 
 
@@ -37,6 +37,7 @@ app = FastAPI(title="TrustShield API", version="0.1.0")
 policy_cfg = load_policy()
 bundle = _load_model_bundle()
 fallback = HeuristicFallbackModel()
+policy_state = init_policy_state()
 
 
 @app.get("/health")
@@ -67,6 +68,12 @@ def monitoring_dashboard() -> HTMLResponse:
     return HTMLResponse(content=dashboard_path.read_text(encoding="utf-8"), status_code=200)
 
 
+@app.post("/policy/reset")
+def policy_reset() -> dict[str, str]:
+    reset_policy_state(policy_state)
+    return {"status": "ok"}
+
+
 @app.post("/predict", response_model=PredictResponse)
 def predict(req: PredictRequest) -> PredictResponse:
     payload = req.model_dump()
@@ -86,7 +93,7 @@ def predict(req: PredictRequest) -> PredictResponse:
         model_reasons = []
         feature_contributions = {}
         components = {"text_score": round(score, 4), "tabular_score": round(score, 4)}
-    decision, reasons = decide(score, payload, policy_cfg)
+    decision, reasons, policy_triggers = decide(score, payload, policy_cfg, state=policy_state)
     return PredictResponse(
         risk_score=round(score, 4),
         decision=decision,
@@ -94,6 +101,7 @@ def predict(req: PredictRequest) -> PredictResponse:
         model_reasons=model_reasons,
         components=components,
         feature_contributions=feature_contributions,
+        policy_triggers=policy_triggers,
     )
 
 
