@@ -9,6 +9,44 @@ from trustshield.features import graph_features_for_payload
 from trustshield.preprocessing import normalize_text
 
 
+def _top_text_matches(text: str, ngrams: set[str], limit: int = 5) -> list[str]:
+    text_tokens = text.split()
+    matched: list[str] = []
+    for ng in sorted(ngrams):
+        ng_tokens = ng.split()
+        n = len(ng_tokens)
+        if n == 1 and ng_tokens[0] in text_tokens:
+            matched.append(ng)
+        elif n > 1:
+            for i in range(max(len(text_tokens) - n + 1, 0)):
+                if text_tokens[i : i + n] == ng_tokens:
+                    matched.append(ng)
+                    break
+        if len(matched) >= limit:
+            break
+    return matched
+
+
+def _tabular_explain(
+    model: Any, feature_names: list[str], feature_row: np.ndarray
+) -> tuple[dict[str, float], str]:
+    try:
+        import shap  # type: ignore
+
+        explainer = shap.LinearExplainer(model, feature_row, feature_perturbation="interventional")
+        shap_values = explainer.shap_values(feature_row)
+        values = np.asarray(shap_values)[0]
+        raw = {feature_names[i]: float(values[i]) for i in range(min(len(values), len(feature_names)))}
+        top = sorted(raw.items(), key=lambda kv: abs(kv[1]), reverse=True)[:6]
+        return ({name: round(value, 4) for name, value in top}, "shap")
+    except Exception:
+        coef = model.coef_[0]
+        contrib_values = feature_row[0] * coef
+        raw = {feature_names[i]: float(contrib_values[i]) for i in range(min(len(coef), len(feature_names)))}
+        top = sorted(raw.items(), key=lambda kv: abs(kv[1]), reverse=True)[:6]
+        return ({name: round(value, 4) for name, value in top}, "linear_coef")
+
+
 def explain_event(model_bundle: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
     text_model = model_bundle["text_model"]
     tabular_model = model_bundle["tabular_model"]
@@ -61,17 +99,13 @@ def explain_event(model_bundle: dict[str, Any], payload: dict[str, Any]) -> dict
     tabular_score = float(tabular_model.predict_proba(pd.DataFrame(tabular_features))[0][1])
     risk_score = float(weights["text"] * text_score + weights["tabular"] * tabular_score)
 
-    message_tokens = set(text.split())
-    model_reasons = sorted(ng for ng in top_ngrams if ng in message_tokens)[:5]
+    model_reasons = _top_text_matches(text, top_ngrams, limit=5)
     feature_contributions: dict[str, float] = {}
+    explanation_method = "none"
     if tabular_feature_names:
-        coef = tabular_model.coef_[0]
-        contrib_values = tabular_features[0] * coef
-        raw_contrib = {
-            tabular_feature_names[i]: float(contrib_values[i]) for i in range(min(len(tabular_feature_names), len(coef)))
-        }
-        top_items = sorted(raw_contrib.items(), key=lambda kv: abs(kv[1]), reverse=True)[:6]
-        feature_contributions = {name: round(value, 4) for name, value in top_items}
+        feature_contributions, explanation_method = _tabular_explain(
+            tabular_model, tabular_feature_names, tabular_features
+        )
 
     return {
         "risk_score": risk_score,
@@ -81,6 +115,7 @@ def explain_event(model_bundle: dict[str, Any], payload: dict[str, Any]) -> dict
         "graph_max_entity_pagerank": graph_features["graph_max_entity_pagerank"],
         "model_reasons": model_reasons,
         "feature_contributions": feature_contributions,
+        "explanation_method": explanation_method,
     }
 
 

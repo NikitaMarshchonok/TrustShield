@@ -52,6 +52,7 @@ def test_predict() -> None:
     assert isinstance(body["components"], dict)
     assert isinstance(body["feature_contributions"], dict)
     assert isinstance(body["policy_triggers"], list)
+    assert body["explanation_method"] in {"shap", "linear_coef", "fallback", "none"}
 
 
 def test_explain() -> None:
@@ -72,3 +73,4 @@ def test_explain() -> None:
     assert "text_score" in body["components"]
     assert "tabular_score" in body["components"]
     assert "feature_contributions" in body
+    assert body["explanation_method"] in {"shap", "linear_coef", "fallback", "none"}

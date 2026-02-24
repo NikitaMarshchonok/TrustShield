@@ -82,6 +82,7 @@ def predict(req: PredictRequest) -> PredictResponse:
         score = model_output["risk_score"]
         model_reasons = model_output["model_reasons"]
         feature_contributions = model_output["feature_contributions"]
+        explanation_method = model_output.get("explanation_method", "none")
         components = {
             "text_score": round(float(model_output["text_score"]), 4),
             "tabular_score": round(float(model_output["tabular_score"]), 4),
@@ -92,6 +93,7 @@ def predict(req: PredictRequest) -> PredictResponse:
         score = fallback.predict(payload)
         model_reasons = []
         feature_contributions = {}
+        explanation_method = "fallback"
         components = {"text_score": round(score, 4), "tabular_score": round(score, 4)}
     decision, reasons, policy_triggers = decide(score, payload, policy_cfg, state=policy_state)
     return PredictResponse(
@@ -102,6 +104,7 @@ def predict(req: PredictRequest) -> PredictResponse:
         components=components,
         feature_contributions=feature_contributions,
         policy_triggers=policy_triggers,
+        explanation_method=explanation_method,
     )
 
 

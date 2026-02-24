@@ -44,6 +44,8 @@ trustshield/
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
+# optional: SHAP-based explainability
+pip install -e ".[explain]"
 ```
 
 ### 2) Train
@@ -81,7 +83,7 @@ make policy-sim
 
 - `GET /health` - service health and model loading status
 - `POST /predict` - risk score, reasons, decision, score components
-- `POST /explain` - explanation-focused output with top feature contributions
+- `POST /explain` - explanation-focused output with top feature contributions and method
 - `GET /monitoring/summary` - latest drift/quality/latency report
 - `GET /monitoring/dashboard` - rendered local HTML dashboard
 - `POST /policy/reset` - reset in-memory policy counters
@@ -137,6 +139,7 @@ Output: `reports/policy_simulation.json`
 
 - Schema validation via `pandera` (with safe fallback checks if unavailable)
 - MLflow run logging for training metrics and artifacts (`file:./mlruns` by default)
+- Explainability via optional SHAP (`pip install -e ".[explain]"`), with linear fallback if not installed
 
 Commands:
 
@@ -148,5 +151,4 @@ make train
 ## Next Iterations
 
 - Add node2vec embeddings on top of current graph metrics (`degree`, `pagerank`, components)
-- Add SHAP + richer text explanations in `/explain`
 - Integrate Evidently dashboards and alert routing

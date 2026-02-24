@@ -26,3 +26,4 @@ class PredictResponse(BaseModel):
     components: dict[str, float] = Field(default_factory=dict)
     feature_contributions: dict[str, float] = Field(default_factory=dict)
     policy_triggers: list[str] = Field(default_factory=list)
+    explanation_method: str = Field(default="none")
