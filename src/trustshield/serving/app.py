@@ -57,6 +57,14 @@ def monitoring_summary() -> dict[str, Any]:
     return {"status": "ok", "report": json.loads(report_path.read_text(encoding="utf-8"))}
 
 
+@app.get("/metrics/latest")
+def metrics_latest() -> dict[str, Any]:
+    metrics_path = Path("reports/metrics.json")
+    if not metrics_path.exists():
+        return {"status": "missing", "message": "Run `make train` to generate metrics."}
+    return {"status": "ok", "metrics": json.loads(metrics_path.read_text(encoding="utf-8"))}
+
+
 @app.get("/monitoring/dashboard", response_class=HTMLResponse)
 def monitoring_dashboard() -> HTMLResponse:
     dashboard_path = Path("reports/dashboard.html")

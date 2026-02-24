@@ -84,6 +84,7 @@ make policy-sim
 - `GET /health` - service health and model loading status
 - `POST /predict` - risk score, reasons, decision, score components
 - `POST /explain` - explanation-focused output with top feature contributions and method
+- `GET /metrics/latest` - latest training metrics snapshot
 - `GET /monitoring/summary` - latest drift/quality/latency report
 - `GET /monitoring/dashboard` - rendered local HTML dashboard
 - `POST /policy/reset` - reset in-memory policy counters
