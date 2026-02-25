@@ -65,6 +65,14 @@ def metrics_latest() -> dict[str, Any]:
     return {"status": "ok", "metrics": json.loads(metrics_path.read_text(encoding="utf-8"))}
 
 
+@app.get("/policy/simulation/latest")
+def policy_simulation_latest() -> dict[str, Any]:
+    report_path = Path("reports/policy_simulation.json")
+    if not report_path.exists():
+        return {"status": "missing", "message": "Run `make policy-sim` to generate report."}
+    return {"status": "ok", "report": json.loads(report_path.read_text(encoding="utf-8"))}
+
+
 @app.get("/monitoring/dashboard", response_class=HTMLResponse)
 def monitoring_dashboard() -> HTMLResponse:
     dashboard_path = Path("reports/dashboard.html")
