@@ -34,6 +34,13 @@ def test_policy_simulation_latest_endpoint() -> None:
     assert body["status"] in {"ok", "missing"}
 
 
+def test_error_analysis_latest_endpoint() -> None:
+    response = client.get("/error-analysis/latest")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] in {"ok", "missing"}
+
+
 def test_monitoring_dashboard_endpoint() -> None:
     response = client.get("/monitoring/dashboard")
     assert response.status_code in {200, 404}

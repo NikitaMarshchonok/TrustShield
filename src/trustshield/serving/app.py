@@ -73,6 +73,14 @@ def policy_simulation_latest() -> dict[str, Any]:
     return {"status": "ok", "report": json.loads(report_path.read_text(encoding="utf-8"))}
 
 
+@app.get("/error-analysis/latest")
+def error_analysis_latest() -> dict[str, Any]:
+    report_path = Path("reports/error_analysis.json")
+    if not report_path.exists():
+        return {"status": "missing", "message": "Run `make error-analysis` to generate report."}
+    return {"status": "ok", "report": json.loads(report_path.read_text(encoding="utf-8"))}
+
+
 @app.get("/monitoring/dashboard", response_class=HTMLResponse)
 def monitoring_dashboard() -> HTMLResponse:
     dashboard_path = Path("reports/dashboard.html")
