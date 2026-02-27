@@ -87,6 +87,7 @@ make policy-sim
 - `GET /metrics/latest` - latest training metrics snapshot
 - `GET /policy/simulation/latest` - latest policy simulation report
 - `GET /error-analysis/latest` - latest error analysis report
+- `GET /reports/status` - availability and update time for all reports
 - `GET /monitoring/summary` - latest drift/quality/latency report
 - `GET /monitoring/dashboard` - rendered local HTML dashboard
 - `POST /policy/reset` - reset in-memory policy counters

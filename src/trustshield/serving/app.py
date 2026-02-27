@@ -81,6 +81,24 @@ def error_analysis_latest() -> dict[str, Any]:
     return {"status": "ok", "report": json.loads(report_path.read_text(encoding="utf-8"))}
 
 
+@app.get("/reports/status")
+def reports_status() -> dict[str, Any]:
+    paths = {
+        "metrics": Path("reports/metrics.json"),
+        "monitoring": Path("reports/monitoring.json"),
+        "policy_simulation": Path("reports/policy_simulation.json"),
+        "error_analysis": Path("reports/error_analysis.json"),
+        "dashboard": Path("reports/dashboard.html"),
+    }
+    status: dict[str, dict[str, Any]] = {}
+    for name, path in paths.items():
+        if path.exists():
+            status[name] = {"exists": True, "updated_at_epoch": int(path.stat().st_mtime)}
+        else:
+            status[name] = {"exists": False, "updated_at_epoch": None}
+    return {"status": "ok", "reports": status}
+
+
 @app.get("/monitoring/dashboard", response_class=HTMLResponse)
 def monitoring_dashboard() -> HTMLResponse:
     dashboard_path = Path("reports/dashboard.html")
