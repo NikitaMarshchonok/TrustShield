@@ -70,13 +70,10 @@ Open Swagger at `http://127.0.0.1:8000/docs`.
 make test
 ```
 
-### 5) Generate Monitoring + Error Analysis
+### 5) Generate Reports Bundle
 
 ```bash
-make monitor
-make error-analysis
-make dashboard
-make policy-sim
+make reports-all
 ```
 
 ## API

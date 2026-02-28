@@ -24,11 +24,7 @@ jobs:
         run: make validate
       - name: Train smoke
         run: make train
-      - name: Monitoring smoke
-        run: make monitor
-      - name: Error analysis smoke
-        run: make error-analysis
-      - name: Policy simulation smoke
-        run: make policy-sim
+      - name: Reports bundle smoke
+        run: make reports-all
       - name: Docker build
         run: docker build -f docker/Dockerfile -t trustshield:ci .
