@@ -87,6 +87,27 @@ def monitoring_summary() -> dict[str, Any]:
     return {"status": "ok", "report": json.loads(report_path.read_text(encoding="utf-8"))}
 
 
+@app.get("/latency/latest")
+def latency_latest() -> dict[str, Any]:
+    report_path = Path("reports/monitoring.json")
+    if not report_path.exists():
+        return {"status": "missing", "message": "Run `make monitor` to generate latency metrics."}
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    latency_p95_ms = report.get("latency_p95_ms")
+    threshold_ms = policy_cfg.get("monitoring", {}).get("latency_p95_ms_alert")
+    if latency_p95_ms is None or threshold_ms is None:
+        return {"status": "missing", "message": "Latency fields are missing in monitoring config/report."}
+
+    latency_status = "ok" if float(latency_p95_ms) <= float(threshold_ms) else "warn"
+    return {
+        "status": "ok",
+        "latency_status": latency_status,
+        "latency_p95_ms": float(latency_p95_ms),
+        "threshold_ms": float(threshold_ms),
+    }
+
+
 @app.get("/metrics/latest")
 def metrics_latest() -> dict[str, Any]:
     metrics_path = Path("reports/metrics.json")

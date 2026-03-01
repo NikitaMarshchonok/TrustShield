@@ -27,6 +27,13 @@ def test_monitoring_summary_missing_report() -> None:
     assert body["status"] in {"ok", "missing"}
 
 
+def test_latency_latest_endpoint() -> None:
+    response = client.get("/latency/latest")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] in {"ok", "missing"}
+
+
 def test_metrics_latest_endpoint() -> None:
     response = client.get("/metrics/latest")
     assert response.status_code == 200
