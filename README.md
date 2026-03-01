@@ -85,6 +85,7 @@ make reports-all
 - `GET /policy/simulation/latest` - latest policy simulation report
 - `GET /error-analysis/latest` - latest error analysis report
 - `GET /reports/status` - availability and update time for all reports
+- `POST /reports/generate` - generate selected reports on demand
 - `GET /monitoring/summary` - latest drift/quality/latency report
 - `GET /monitoring/dashboard` - rendered local HTML dashboard
 - `POST /policy/reset` - reset in-memory policy counters

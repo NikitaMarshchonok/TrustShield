@@ -27,3 +27,10 @@ class PredictResponse(BaseModel):
     feature_contributions: dict[str, float] = Field(default_factory=dict)
     policy_triggers: list[str] = Field(default_factory=list)
     explanation_method: str = Field(default="none")
+
+
+class ReportsGenerateRequest(BaseModel):
+    monitoring: bool = Field(default=True)
+    error_analysis: bool = Field(default=True)
+    policy_simulation: bool = Field(default=True)
+    dashboard: bool = Field(default=True)

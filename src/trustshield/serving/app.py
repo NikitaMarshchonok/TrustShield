@@ -8,9 +8,13 @@ import joblib
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
+from trustshield.evaluation.error_analysis import generate_error_analysis_report
+from trustshield.evaluation.policy_simulation import run_policy_simulation
 from trustshield.models import explain_event
+from trustshield.monitoring.dashboard import build_dashboard_html
+from trustshield.monitoring.report import generate_monitoring_report
 from trustshield.serving.policy import decide, init_policy_state, load_policy, reset_policy_state
-from trustshield.serving.schemas import PredictRequest, PredictResponse
+from trustshield.serving.schemas import PredictRequest, PredictResponse, ReportsGenerateRequest
 
 
 class HeuristicFallbackModel:
@@ -97,6 +101,46 @@ def reports_status() -> dict[str, Any]:
         else:
             status[name] = {"exists": False, "updated_at_epoch": None}
     return {"status": "ok", "reports": status}
+
+
+@app.post("/reports/generate")
+def reports_generate(req: ReportsGenerateRequest) -> dict[str, Any]:
+    results: dict[str, dict[str, Any]] = {}
+
+    if req.monitoring:
+        try:
+            report = generate_monitoring_report()
+            results["monitoring"] = {"ok": True, "alert": report.get("alert", False)}
+        except Exception as exc:
+            results["monitoring"] = {"ok": False, "error": str(exc)}
+
+    if req.error_analysis:
+        try:
+            report = generate_error_analysis_report()
+            results["error_analysis"] = {"ok": True, "samples": report.get("counts", {}).get("samples")}
+        except Exception as exc:
+            results["error_analysis"] = {"ok": False, "error": str(exc)}
+
+    if req.policy_simulation:
+        try:
+            report = run_policy_simulation()
+            results["policy_simulation"] = {
+                "ok": True,
+                "n_events": report.get("n_events"),
+                "decisions": report.get("decisions"),
+            }
+        except Exception as exc:
+            results["policy_simulation"] = {"ok": False, "error": str(exc)}
+
+    if req.dashboard:
+        try:
+            path = build_dashboard_html()
+            results["dashboard"] = {"ok": True, "path": str(path)}
+        except Exception as exc:
+            results["dashboard"] = {"ok": False, "error": str(exc)}
+
+    all_ok = all(entry.get("ok", False) for entry in results.values()) if results else True
+    return {"status": "ok" if all_ok else "partial", "results": results}
 
 
 @app.get("/monitoring/dashboard", response_class=HTMLResponse)
