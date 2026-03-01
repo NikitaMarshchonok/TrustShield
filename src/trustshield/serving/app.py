@@ -59,6 +59,26 @@ def health() -> dict[str, Any]:
     }
 
 
+@app.get("/model/info")
+def model_info() -> dict[str, Any]:
+    artifact_path = Path("reports/artifacts/model_bundle.joblib")
+    if bundle is None:
+        return {"status": "missing", "message": "Run `make train` to generate model artifact."}
+
+    metrics = bundle.get("metrics", {})
+    top_ngrams = bundle.get("top_ngrams", [])
+    tabular_feature_names = bundle.get("tabular_feature_names", [])
+    return {
+        "status": "ok",
+        "model_loaded": True,
+        "artifact_updated_at_epoch": int(artifact_path.stat().st_mtime) if artifact_path.exists() else None,
+        "ensemble_weights": bundle.get("ensemble_weights", {}),
+        "metrics": metrics,
+        "text_top_ngrams_count": len(top_ngrams),
+        "tabular_feature_count": len(tabular_feature_names),
+    }
+
+
 @app.get("/monitoring/summary")
 def monitoring_summary() -> dict[str, Any]:
     report_path = Path("reports/monitoring.json")

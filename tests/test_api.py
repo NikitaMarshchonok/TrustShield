@@ -13,6 +13,13 @@ def test_health() -> None:
     assert body["status"] == "ok"
 
 
+def test_model_info_endpoint() -> None:
+    response = client.get("/model/info")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] in {"ok", "missing"}
+
+
 def test_monitoring_summary_missing_report() -> None:
     response = client.get("/monitoring/summary")
     assert response.status_code == 200

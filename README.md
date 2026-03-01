@@ -79,6 +79,7 @@ make reports-all
 ## API
 
 - `GET /health` - service health and model loading status
+- `GET /model/info` - loaded model metadata and latest metrics snapshot
 - `POST /predict` - risk score, reasons, decision, score components
 - `POST /explain` - explanation-focused output with top feature contributions and method
 - `GET /metrics/latest` - latest training metrics snapshot
