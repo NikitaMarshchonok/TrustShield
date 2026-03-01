@@ -75,6 +75,15 @@ def test_policy_reset_endpoint() -> None:
     assert response.json()["status"] == "ok"
 
 
+def test_policy_state_endpoint() -> None:
+    response = client.get("/policy/state")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert "state" in body
+    assert "tracked_users" in body["state"]
+
+
 def test_predict() -> None:
     payload = {
         "message_text": "Urgent transfer, click this link now",

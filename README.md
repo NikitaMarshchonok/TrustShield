@@ -89,6 +89,7 @@ make reports-all
 - `GET /monitoring/summary` - latest drift/quality/latency report
 - `GET /monitoring/dashboard` - rendered local HTML dashboard
 - `POST /policy/reset` - reset in-memory policy counters
+- `GET /policy/state` - current in-memory rate-limit state summary
 
 ## Policy Engine
 

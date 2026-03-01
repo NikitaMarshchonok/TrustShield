@@ -13,7 +13,13 @@ from trustshield.evaluation.policy_simulation import run_policy_simulation
 from trustshield.models import explain_event
 from trustshield.monitoring.dashboard import build_dashboard_html
 from trustshield.monitoring.report import generate_monitoring_report
-from trustshield.serving.policy import decide, init_policy_state, load_policy, reset_policy_state
+from trustshield.serving.policy import (
+    decide,
+    init_policy_state,
+    load_policy,
+    policy_state_summary,
+    reset_policy_state,
+)
 from trustshield.serving.schemas import PredictRequest, PredictResponse, ReportsGenerateRequest
 
 
@@ -41,7 +47,7 @@ app = FastAPI(title="TrustShield API", version="0.1.0")
 policy_cfg = load_policy()
 bundle = _load_model_bundle()
 fallback = HeuristicFallbackModel()
-policy_state = init_policy_state()
+policy_runtime_state = init_policy_state()
 
 
 @app.get("/health")
@@ -156,8 +162,13 @@ def monitoring_dashboard() -> HTMLResponse:
 
 @app.post("/policy/reset")
 def policy_reset() -> dict[str, str]:
-    reset_policy_state(policy_state)
+    reset_policy_state(policy_runtime_state)
     return {"status": "ok"}
+
+
+@app.get("/policy/state")
+def policy_state_snapshot() -> dict[str, Any]:
+    return {"status": "ok", "state": policy_state_summary(policy_runtime_state)}
 
 
 @app.post("/predict", response_model=PredictResponse)
@@ -181,7 +192,7 @@ def predict(req: PredictRequest) -> PredictResponse:
         feature_contributions = {}
         explanation_method = "fallback"
         components = {"text_score": round(score, 4), "tabular_score": round(score, 4)}
-    decision, reasons, policy_triggers = decide(score, payload, policy_cfg, state=policy_state)
+    decision, reasons, policy_triggers = decide(score, payload, policy_cfg, state=policy_runtime_state)
     return PredictResponse(
         risk_score=round(score, 4),
         decision=decision,

@@ -33,6 +33,17 @@ def reset_policy_state(state: PolicyState) -> None:
     state.ip_events.clear()
 
 
+def policy_state_summary(state: PolicyState) -> dict[str, Any]:
+    return {
+        "tracked_users": len(state.user_events),
+        "tracked_devices": len(state.device_events),
+        "tracked_ips": len(state.ip_events),
+        "user_event_points": sum(len(v) for v in state.user_events.values()),
+        "device_event_points": sum(len(v) for v in state.device_events.values()),
+        "ip_event_points": sum(len(v) for v in state.ip_events.values()),
+    }
+
+
 def _push_event(queue: deque[float], event_ts: float, window_seconds: int) -> int:
     queue.append(event_ts)
     min_allowed = event_ts - float(window_seconds)
