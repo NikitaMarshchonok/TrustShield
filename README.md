@@ -89,6 +89,7 @@ make reports-all
 - `POST /reports/generate` - generate selected reports on demand
 - `GET /monitoring/summary` - latest drift/quality/latency report
 - `GET /latency/latest` - latest latency p95 and threshold status
+- `GET /alerts/latest` - aggregated active alerts from monitoring and latency checks
 - `GET /monitoring/dashboard` - rendered local HTML dashboard
 - `POST /policy/reset` - reset in-memory policy counters
 - `GET /policy/state` - current in-memory rate-limit state summary

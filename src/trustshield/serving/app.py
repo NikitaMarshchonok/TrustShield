@@ -108,6 +108,45 @@ def latency_latest() -> dict[str, Any]:
     }
 
 
+@app.get("/alerts/latest")
+def alerts_latest() -> dict[str, Any]:
+    report_path = Path("reports/monitoring.json")
+    if not report_path.exists():
+        return {"status": "missing", "message": "Run `make monitor` to generate alert sources."}
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    active_alerts: list[dict[str, Any]] = []
+
+    if bool(report.get("alert", False)):
+        active_alerts.append(
+            {
+                "source": "monitoring",
+                "type": "drift_or_quality_or_latency",
+                "severity": "high",
+            }
+        )
+
+    latency_p95_ms = report.get("latency_p95_ms")
+    latency_threshold = policy_cfg.get("monitoring", {}).get("latency_p95_ms_alert")
+    if latency_p95_ms is not None and latency_threshold is not None and float(latency_p95_ms) > float(latency_threshold):
+        active_alerts.append(
+            {
+                "source": "latency",
+                "type": "latency_p95_budget_exceeded",
+                "severity": "medium",
+                "value": float(latency_p95_ms),
+                "threshold": float(latency_threshold),
+            }
+        )
+
+    return {
+        "status": "ok",
+        "has_alerts": bool(active_alerts),
+        "alerts_count": len(active_alerts),
+        "alerts": active_alerts,
+    }
+
+
 @app.get("/metrics/latest")
 def metrics_latest() -> dict[str, Any]:
     metrics_path = Path("reports/metrics.json")
