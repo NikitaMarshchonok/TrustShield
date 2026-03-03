@@ -225,6 +225,25 @@ def decision_mix_latest() -> dict[str, Any]:
     }
 
 
+@app.get("/policy/triggers/latest")
+def policy_triggers_latest() -> dict[str, Any]:
+    report_path = Path("reports/policy_simulation.json")
+    if not report_path.exists():
+        return {"status": "missing", "message": "Run `make policy-sim` to generate trigger stats."}
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    top_triggers = report.get("top_policy_triggers")
+    if not isinstance(top_triggers, list):
+        return {"status": "missing", "message": "Trigger fields are missing in policy simulation report."}
+
+    normalized = []
+    for item in top_triggers:
+        if isinstance(item, (list, tuple)) and len(item) == 2:
+            normalized.append({"trigger": str(item[0]), "count": int(item[1])})
+
+    return {"status": "ok", "top_policy_triggers": normalized}
+
+
 @app.get("/metrics/latest")
 def metrics_latest() -> dict[str, Any]:
     metrics_path = Path("reports/metrics.json")

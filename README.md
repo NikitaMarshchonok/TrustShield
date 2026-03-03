@@ -93,6 +93,7 @@ make reports-all
 - `GET /quality/latest` - latest quality ratio (recent vs baseline PR-AUC) and status
 - `GET /drift/latest` - latest drift shift score, threshold, and feature shifts
 - `GET /decision-mix/latest` - latest allow/review/block mix and precision proxies
+- `GET /policy/triggers/latest` - latest top policy triggers and frequencies
 - `GET /monitoring/dashboard` - rendered local HTML dashboard
 - `POST /policy/reset` - reset in-memory policy counters
 - `GET /policy/state` - current in-memory rate-limit state summary

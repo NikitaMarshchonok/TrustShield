@@ -62,6 +62,13 @@ def test_decision_mix_latest_endpoint() -> None:
     assert body["status"] in {"ok", "missing"}
 
 
+def test_policy_triggers_latest_endpoint() -> None:
+    response = client.get("/policy/triggers/latest")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] in {"ok", "missing"}
+
+
 def test_metrics_latest_endpoint() -> None:
     response = client.get("/metrics/latest")
     assert response.status_code == 200
