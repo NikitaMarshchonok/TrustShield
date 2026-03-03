@@ -147,6 +147,31 @@ def alerts_latest() -> dict[str, Any]:
     }
 
 
+@app.get("/quality/latest")
+def quality_latest() -> dict[str, Any]:
+    report_path = Path("reports/monitoring.json")
+    if not report_path.exists():
+        return {"status": "missing", "message": "Run `make monitor` to generate quality metrics."}
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    baseline_pr_auc = report.get("baseline_pr_auc")
+    recent_pr_auc = report.get("recent_pr_auc")
+    quality_ratio_threshold = policy_cfg.get("monitoring", {}).get("quality_drop_ratio_alert")
+    if baseline_pr_auc is None or recent_pr_auc is None or quality_ratio_threshold is None:
+        return {"status": "missing", "message": "Quality fields are missing in monitoring config/report."}
+
+    ratio = float(recent_pr_auc) / max(float(baseline_pr_auc), 1e-9)
+    quality_status = "ok" if ratio >= float(quality_ratio_threshold) else "warn"
+    return {
+        "status": "ok",
+        "quality_status": quality_status,
+        "baseline_pr_auc": float(baseline_pr_auc),
+        "recent_pr_auc": float(recent_pr_auc),
+        "quality_ratio": ratio,
+        "threshold_ratio": float(quality_ratio_threshold),
+    }
+
+
 @app.get("/metrics/latest")
 def metrics_latest() -> dict[str, Any]:
     metrics_path = Path("reports/metrics.json")
