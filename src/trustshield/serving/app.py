@@ -172,6 +172,29 @@ def quality_latest() -> dict[str, Any]:
     }
 
 
+@app.get("/drift/latest")
+def drift_latest() -> dict[str, Any]:
+    report_path = Path("reports/monitoring.json")
+    if not report_path.exists():
+        return {"status": "missing", "message": "Run `make monitor` to generate drift metrics."}
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    score_shift_abs = report.get("score_shift_abs")
+    feature_shifts = report.get("feature_shifts", {})
+    score_shift_threshold = policy_cfg.get("monitoring", {}).get("score_shift_alert")
+    if score_shift_abs is None or score_shift_threshold is None:
+        return {"status": "missing", "message": "Drift fields are missing in monitoring config/report."}
+
+    drift_status = "ok" if float(score_shift_abs) <= float(score_shift_threshold) else "warn"
+    return {
+        "status": "ok",
+        "drift_status": drift_status,
+        "score_shift_abs": float(score_shift_abs),
+        "threshold_abs": float(score_shift_threshold),
+        "feature_shifts": feature_shifts,
+    }
+
+
 @app.get("/metrics/latest")
 def metrics_latest() -> dict[str, Any]:
     metrics_path = Path("reports/metrics.json")

@@ -91,6 +91,7 @@ make reports-all
 - `GET /latency/latest` - latest latency p95 and threshold status
 - `GET /alerts/latest` - aggregated active alerts from monitoring and latency checks
 - `GET /quality/latest` - latest quality ratio (recent vs baseline PR-AUC) and status
+- `GET /drift/latest` - latest drift shift score, threshold, and feature shifts
 - `GET /monitoring/dashboard` - rendered local HTML dashboard
 - `POST /policy/reset` - reset in-memory policy counters
 - `GET /policy/state` - current in-memory rate-limit state summary
