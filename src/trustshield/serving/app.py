@@ -195,6 +195,36 @@ def drift_latest() -> dict[str, Any]:
     }
 
 
+@app.get("/decision-mix/latest")
+def decision_mix_latest() -> dict[str, Any]:
+    report_path = Path("reports/policy_simulation.json")
+    if not report_path.exists():
+        return {"status": "missing", "message": "Run `make policy-sim` to generate decision mix metrics."}
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    decisions = report.get("decisions")
+    if not isinstance(decisions, dict):
+        return {"status": "missing", "message": "Decision fields are missing in policy simulation report."}
+
+    allow = int(decisions.get("allow", 0))
+    review = int(decisions.get("review", 0))
+    block = int(decisions.get("block", 0))
+    total = max(allow + review + block, 1)
+
+    return {
+        "status": "ok",
+        "counts": {"allow": allow, "review": review, "block": block},
+        "ratios": {
+            "allow": round(allow / total, 4),
+            "review": round(review / total, 4),
+            "block": round(block / total, 4),
+        },
+        "review_precision_proxy": report.get("review_precision_proxy"),
+        "block_precision_proxy": report.get("block_precision_proxy"),
+        "n_events": report.get("n_events"),
+    }
+
+
 @app.get("/metrics/latest")
 def metrics_latest() -> dict[str, Any]:
     metrics_path = Path("reports/metrics.json")
