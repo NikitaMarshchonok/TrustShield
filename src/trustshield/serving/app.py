@@ -59,6 +59,18 @@ def health() -> dict[str, Any]:
     }
 
 
+@app.get("/health/ready")
+def health_ready() -> dict[str, Any]:
+    checks = {
+        "policy_loaded": bool(policy_cfg),
+        "model_loaded": bundle is not None,
+        "model_artifact_exists": Path("reports/artifacts/model_bundle.joblib").exists(),
+        "training_metrics_exists": Path("reports/metrics.json").exists(),
+    }
+    ready = all(checks.values())
+    return {"status": "ready" if ready else "not_ready", "checks": checks}
+
+
 @app.get("/model/info")
 def model_info() -> dict[str, Any]:
     artifact_path = Path("reports/artifacts/model_bundle.joblib")

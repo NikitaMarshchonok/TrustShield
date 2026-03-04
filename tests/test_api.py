@@ -13,6 +13,14 @@ def test_health() -> None:
     assert body["status"] == "ok"
 
 
+def test_health_ready() -> None:
+    response = client.get("/health/ready")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] in {"ready", "not_ready"}
+    assert "checks" in body
+
+
 def test_model_info_endpoint() -> None:
     response = client.get("/model/info")
     assert response.status_code == 200
