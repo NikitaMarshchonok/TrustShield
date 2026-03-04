@@ -34,3 +34,11 @@ class ReportsGenerateRequest(BaseModel):
     error_analysis: bool = Field(default=True)
     policy_simulation: bool = Field(default=True)
     dashboard: bool = Field(default=True)
+
+
+class BatchPredictRequest(BaseModel):
+    items: list[PredictRequest] = Field(..., min_length=1, max_length=100)
+
+
+class BatchPredictResponse(BaseModel):
+    items: list[PredictResponse]

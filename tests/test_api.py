@@ -174,6 +174,41 @@ def test_predict() -> None:
     assert body["explanation_method"] in {"shap", "linear_coef", "fallback", "none"}
 
 
+def test_predict_batch() -> None:
+    payload = {
+        "items": [
+            {
+                "message_text": "Urgent transfer, click this link now",
+                "country": "NG",
+                "device_id": "device_0001",
+                "ip_id": "ip_0001",
+                "card_id": "card_0001",
+                "payment_attempts": 5,
+                "account_age_days": 1,
+                "device_reuse_count": 5,
+                "chargeback_history": 1,
+            },
+            {
+                "message_text": "Hi, I want to buy this item",
+                "country": "US",
+                "device_id": "device_0002",
+                "ip_id": "ip_0002",
+                "card_id": "card_0002",
+                "payment_attempts": 1,
+                "account_age_days": 100,
+                "device_reuse_count": 1,
+                "chargeback_history": 0,
+            },
+        ]
+    }
+    response = client.post("/predict/batch", json=payload)
+    assert response.status_code == 200
+    body = response.json()
+    assert "items" in body
+    assert len(body["items"]) == 2
+    assert all("risk_score" in item for item in body["items"])
+
+
 def test_explain() -> None:
     payload = {
         "message_text": "Please click and send otp urgently",

@@ -20,7 +20,13 @@ from trustshield.serving.policy import (
     policy_state_summary,
     reset_policy_state,
 )
-from trustshield.serving.schemas import PredictRequest, PredictResponse, ReportsGenerateRequest
+from trustshield.serving.schemas import (
+    BatchPredictRequest,
+    BatchPredictResponse,
+    PredictRequest,
+    PredictResponse,
+    ReportsGenerateRequest,
+)
 
 
 class HeuristicFallbackModel:
@@ -403,6 +409,12 @@ def predict(req: PredictRequest) -> PredictResponse:
         policy_triggers=policy_triggers,
         explanation_method=explanation_method,
     )
+
+
+@app.post("/predict/batch", response_model=BatchPredictResponse)
+def predict_batch(req: BatchPredictRequest) -> BatchPredictResponse:
+    results = [predict(item) for item in req.items]
+    return BatchPredictResponse(items=results)
 
 
 @app.post("/explain", response_model=PredictResponse)
