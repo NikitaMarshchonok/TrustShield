@@ -141,6 +141,15 @@ def test_policy_state_endpoint() -> None:
     assert "tracked_users" in body["state"]
 
 
+def test_policy_config_endpoint() -> None:
+    response = client.get("/policy/config")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert "score_thresholds" in body
+    assert "rate_limits" in body
+
+
 def test_predict() -> None:
     payload = {
         "message_text": "Urgent transfer, click this link now",

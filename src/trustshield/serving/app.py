@@ -360,6 +360,17 @@ def policy_state_snapshot() -> dict[str, Any]:
     return {"status": "ok", "state": policy_state_summary(policy_runtime_state)}
 
 
+@app.get("/policy/config")
+def policy_config() -> dict[str, Any]:
+    return {
+        "status": "ok",
+        "score_thresholds": policy_cfg.get("score_thresholds", {}),
+        "hard_rules": policy_cfg.get("hard_rules", {}),
+        "rate_limits": policy_cfg.get("rate_limits", {}),
+        "monitoring": policy_cfg.get("monitoring", {}),
+    }
+
+
 @app.post("/predict", response_model=PredictResponse)
 def predict(req: PredictRequest) -> PredictResponse:
     payload = req.model_dump()

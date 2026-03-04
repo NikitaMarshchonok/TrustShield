@@ -98,6 +98,7 @@ make reports-all
 - `GET /monitoring/dashboard` - rendered local HTML dashboard
 - `POST /policy/reset` - reset in-memory policy counters
 - `GET /policy/state` - current in-memory rate-limit state summary
+- `GET /policy/config` - active policy thresholds and rule settings
 
 ## Policy Engine
 
