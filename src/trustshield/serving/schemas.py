@@ -33,6 +33,7 @@ class ReportsGenerateRequest(BaseModel):
     monitoring: bool = Field(default=True)
     error_analysis: bool = Field(default=True)
     policy_simulation: bool = Field(default=True)
+    cost_report: bool = Field(default=True)
     dashboard: bool = Field(default=True)
 
 

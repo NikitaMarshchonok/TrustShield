@@ -8,6 +8,7 @@ import joblib
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
+from trustshield.evaluation.cost_report import generate_cost_report
 from trustshield.evaluation.error_analysis import generate_error_analysis_report
 from trustshield.evaluation.policy_simulation import run_policy_simulation
 from trustshield.models import explain_event
@@ -262,6 +263,14 @@ def policy_triggers_latest() -> dict[str, Any]:
     return {"status": "ok", "top_policy_triggers": normalized}
 
 
+@app.get("/cost/latest")
+def cost_latest() -> dict[str, Any]:
+    report_path = Path("reports/cost_report.json")
+    if not report_path.exists():
+        return {"status": "missing", "message": "Run `make cost-report` to generate cost metrics."}
+    return {"status": "ok", "report": json.loads(report_path.read_text(encoding="utf-8"))}
+
+
 @app.get("/metrics/latest")
 def metrics_latest() -> dict[str, Any]:
     metrics_path = Path("reports/metrics.json")
@@ -293,6 +302,7 @@ def reports_status() -> dict[str, Any]:
         "monitoring": Path("reports/monitoring.json"),
         "policy_simulation": Path("reports/policy_simulation.json"),
         "error_analysis": Path("reports/error_analysis.json"),
+        "cost_report": Path("reports/cost_report.json"),
         "dashboard": Path("reports/dashboard.html"),
     }
     status: dict[str, dict[str, Any]] = {}
@@ -339,6 +349,16 @@ def reports_generate(req: ReportsGenerateRequest) -> dict[str, Any]:
             results["dashboard"] = {"ok": True, "path": str(path)}
         except Exception as exc:
             results["dashboard"] = {"ok": False, "error": str(exc)}
+
+    if req.cost_report:
+        try:
+            report = generate_cost_report()
+            results["cost_report"] = {
+                "ok": True,
+                "estimated_cost_saved": report.get("estimated_cost_saved"),
+            }
+        except Exception as exc:
+            results["cost_report"] = {"ok": False, "error": str(exc)}
 
     all_ok = all(entry.get("ok", False) for entry in results.values()) if results else True
     return {"status": "ok" if all_ok else "partial", "results": results}

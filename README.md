@@ -87,6 +87,7 @@ make reports-all
 - `GET /metrics/latest` - latest training metrics snapshot
 - `GET /policy/simulation/latest` - latest policy simulation report
 - `GET /error-analysis/latest` - latest error analysis report
+- `GET /cost/latest` - latest cost-based savings estimate report
 - `GET /reports/status` - availability and update time for all reports
 - `POST /reports/generate` - generate selected reports on demand
 - `GET /monitoring/summary` - latest drift/quality/latency report
@@ -147,6 +148,16 @@ make policy-sim
 ```
 
 Output: `reports/policy_simulation.json`
+
+## Cost Report
+
+Estimate business impact with a cost-based metric:
+
+```bash
+make cost-report
+```
+
+Output: `reports/cost_report.json`
 
 ## Validation and Tracking
 

@@ -77,6 +77,13 @@ def test_policy_triggers_latest_endpoint() -> None:
     assert body["status"] in {"ok", "missing"}
 
 
+def test_cost_latest_endpoint() -> None:
+    response = client.get("/cost/latest")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] in {"ok", "missing"}
+
+
 def test_metrics_latest_endpoint() -> None:
     response = client.get("/metrics/latest")
     assert response.status_code == 200
@@ -112,6 +119,7 @@ def test_reports_generate_endpoint() -> None:
         "monitoring": False,
         "error_analysis": False,
         "policy_simulation": False,
+        "cost_report": False,
         "dashboard": False,
     }
     response = client.post("/reports/generate", json=payload)
