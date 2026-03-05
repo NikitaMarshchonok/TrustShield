@@ -314,6 +314,45 @@ def reports_status() -> dict[str, Any]:
     return {"status": "ok", "reports": status}
 
 
+@app.get("/reports/overview")
+def reports_overview() -> dict[str, Any]:
+    metrics_path = Path("reports/metrics.json")
+    monitoring_path = Path("reports/monitoring.json")
+    cost_path = Path("reports/cost_report.json")
+    policy_sim_path = Path("reports/policy_simulation.json")
+
+    overview: dict[str, Any] = {"status": "ok", "kpis": {}, "sources": {}}
+
+    if metrics_path.exists():
+        metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+        overview["kpis"]["pr_auc"] = metrics.get("pr_auc")
+        overview["kpis"]["recall_at_precision_0_90"] = metrics.get("recall_at_precision_0_90")
+    overview["sources"]["metrics"] = metrics_path.exists()
+
+    if monitoring_path.exists():
+        monitoring = json.loads(monitoring_path.read_text(encoding="utf-8"))
+        overview["kpis"]["quality_ratio"] = (
+            float(monitoring.get("recent_pr_auc", 0.0)) / max(float(monitoring.get("baseline_pr_auc", 1.0)), 1e-9)
+        )
+        overview["kpis"]["score_shift_abs"] = monitoring.get("score_shift_abs")
+        overview["kpis"]["latency_p95_ms"] = monitoring.get("latency_p95_ms")
+        overview["kpis"]["monitoring_alert"] = monitoring.get("alert")
+    overview["sources"]["monitoring"] = monitoring_path.exists()
+
+    if cost_path.exists():
+        cost = json.loads(cost_path.read_text(encoding="utf-8"))
+        overview["kpis"]["estimated_cost_saved"] = cost.get("estimated_cost_saved")
+    overview["sources"]["cost_report"] = cost_path.exists()
+
+    if policy_sim_path.exists():
+        policy_sim = json.loads(policy_sim_path.read_text(encoding="utf-8"))
+        overview["kpis"]["review_precision_proxy"] = policy_sim.get("review_precision_proxy")
+        overview["kpis"]["block_precision_proxy"] = policy_sim.get("block_precision_proxy")
+    overview["sources"]["policy_simulation"] = policy_sim_path.exists()
+
+    return overview
+
+
 @app.post("/reports/generate")
 def reports_generate(req: ReportsGenerateRequest) -> dict[str, Any]:
     results: dict[str, dict[str, Any]] = {}

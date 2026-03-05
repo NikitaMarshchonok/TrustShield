@@ -89,6 +89,7 @@ make reports-all
 - `GET /error-analysis/latest` - latest error analysis report
 - `GET /cost/latest` - latest cost-based savings estimate report
 - `GET /reports/status` - availability and update time for all reports
+- `GET /reports/overview` - consolidated KPI snapshot across key reports
 - `POST /reports/generate` - generate selected reports on demand
 - `GET /monitoring/summary` - latest drift/quality/latency report
 - `GET /latency/latest` - latest latency p95 and threshold status

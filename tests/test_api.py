@@ -114,6 +114,15 @@ def test_reports_status_endpoint() -> None:
     assert "metrics" in body["reports"]
 
 
+def test_reports_overview_endpoint() -> None:
+    response = client.get("/reports/overview")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert "kpis" in body
+    assert "sources" in body
+
+
 def test_reports_generate_endpoint() -> None:
     payload = {
         "monitoring": False,
