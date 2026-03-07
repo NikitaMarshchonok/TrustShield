@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -55,6 +56,14 @@ policy_cfg = load_policy()
 bundle = _load_model_bundle()
 fallback = HeuristicFallbackModel()
 policy_runtime_state = init_policy_state()
+serving_stats_lock = threading.Lock()
+serving_stats: dict[str, Any] = {
+    "total_requests": 0,
+    "predict_requests": 0,
+    "batch_requests": 0,
+    "predicted_items": 0,
+    "decision_counts": {"allow": 0, "review": 0, "block": 0},
+}
 
 
 @app.get("/health")
@@ -64,6 +73,30 @@ def health() -> dict[str, Any]:
         "model_loaded": bundle is not None,
         "policy_loaded": bool(policy_cfg),
     }
+
+
+@app.get("/serving/stats")
+def serving_stats_snapshot() -> dict[str, Any]:
+    with serving_stats_lock:
+        snapshot = {
+            "total_requests": int(serving_stats["total_requests"]),
+            "predict_requests": int(serving_stats["predict_requests"]),
+            "batch_requests": int(serving_stats["batch_requests"]),
+            "predicted_items": int(serving_stats["predicted_items"]),
+            "decision_counts": dict(serving_stats["decision_counts"]),
+        }
+    return {"status": "ok", "stats": snapshot}
+
+
+@app.post("/serving/stats/reset")
+def serving_stats_reset() -> dict[str, str]:
+    with serving_stats_lock:
+        serving_stats["total_requests"] = 0
+        serving_stats["predict_requests"] = 0
+        serving_stats["batch_requests"] = 0
+        serving_stats["predicted_items"] = 0
+        serving_stats["decision_counts"] = {"allow": 0, "review": 0, "block": 0}
+    return {"status": "ok"}
 
 
 @app.get("/health/ready")
@@ -458,6 +491,11 @@ def predict(req: PredictRequest) -> PredictResponse:
         explanation_method = "fallback"
         components = {"text_score": round(score, 4), "tabular_score": round(score, 4)}
     decision, reasons, policy_triggers = decide(score, payload, policy_cfg, state=policy_runtime_state)
+    with serving_stats_lock:
+        serving_stats["total_requests"] += 1
+        serving_stats["predict_requests"] += 1
+        serving_stats["predicted_items"] += 1
+        serving_stats["decision_counts"][decision] = serving_stats["decision_counts"].get(decision, 0) + 1
     return PredictResponse(
         risk_score=round(score, 4),
         decision=decision,
@@ -472,6 +510,9 @@ def predict(req: PredictRequest) -> PredictResponse:
 
 @app.post("/predict/batch", response_model=BatchPredictResponse)
 def predict_batch(req: BatchPredictRequest) -> BatchPredictResponse:
+    with serving_stats_lock:
+        serving_stats["total_requests"] += 1
+        serving_stats["batch_requests"] += 1
     results = [predict(item) for item in req.items]
     return BatchPredictResponse(items=results)
 

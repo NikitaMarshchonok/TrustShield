@@ -13,6 +13,18 @@ def test_health() -> None:
     assert body["status"] == "ok"
 
 
+def test_serving_stats_endpoints() -> None:
+    reset_response = client.post("/serving/stats/reset")
+    assert reset_response.status_code == 200
+    assert reset_response.json()["status"] == "ok"
+
+    stats_response = client.get("/serving/stats")
+    assert stats_response.status_code == 200
+    body = stats_response.json()
+    assert body["status"] == "ok"
+    assert body["stats"]["predict_requests"] == 0
+
+
 def test_health_ready() -> None:
     response = client.get("/health/ready")
     assert response.status_code == 200
@@ -189,6 +201,12 @@ def test_predict() -> None:
     assert isinstance(body["feature_contributions"], dict)
     assert isinstance(body["policy_triggers"], list)
     assert body["explanation_method"] in {"shap", "linear_coef", "fallback", "none"}
+
+    stats_response = client.get("/serving/stats")
+    assert stats_response.status_code == 200
+    stats_body = stats_response.json()
+    assert stats_body["stats"]["predict_requests"] >= 1
+    assert stats_body["stats"]["predicted_items"] >= 1
 
 
 def test_predict_batch() -> None:
