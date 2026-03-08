@@ -150,6 +150,14 @@ def test_reports_generate_endpoint() -> None:
     assert "results" in body
 
 
+def test_reports_generate_all_endpoint() -> None:
+    response = client.post("/reports/generate/all")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] in {"ok", "partial"}
+    assert "results" in body
+
+
 def test_monitoring_dashboard_endpoint() -> None:
     response = client.get("/monitoring/dashboard")
     assert response.status_code in {200, 404}

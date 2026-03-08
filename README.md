@@ -93,6 +93,7 @@ make reports-all
 - `GET /reports/status` - availability and update time for all reports
 - `GET /reports/overview` - consolidated KPI snapshot across key reports
 - `POST /reports/generate` - generate selected reports on demand
+- `POST /reports/generate/all` - generate full reports bundle with defaults
 - `GET /monitoring/summary` - latest drift/quality/latency report
 - `GET /latency/latest` - latest latency p95 and threshold status
 - `GET /alerts/latest` - aggregated active alerts from monitoring and latency checks

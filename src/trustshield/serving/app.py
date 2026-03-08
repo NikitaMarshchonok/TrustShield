@@ -436,6 +436,19 @@ def reports_generate(req: ReportsGenerateRequest) -> dict[str, Any]:
     return {"status": "ok" if all_ok else "partial", "results": results}
 
 
+@app.post("/reports/generate/all")
+def reports_generate_all() -> dict[str, Any]:
+    return reports_generate(
+        ReportsGenerateRequest(
+            monitoring=True,
+            error_analysis=True,
+            policy_simulation=True,
+            cost_report=True,
+            dashboard=True,
+        )
+    )
+
+
 @app.get("/monitoring/dashboard", response_class=HTMLResponse)
 def monitoring_dashboard() -> HTMLResponse:
     dashboard_path = Path("reports/dashboard.html")

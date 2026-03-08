@@ -1,0 +1,24 @@
+{
+  "n_events": 1200,
+  "decisions": {
+    "allow": 795,
+    "review": 151,
+    "block": 254
+  },
+  "review_precision_proxy": 0.4901,
+  "block_precision_proxy": 0.4961,
+  "top_policy_triggers": [
+    [
+      "hard_rule:max_payment_attempts",
+      218
+    ],
+    [
+      "score:review_threshold",
+      151
+    ],
+    [
+      "score:block_threshold",
+      36
+    ]
+  ]
+}
