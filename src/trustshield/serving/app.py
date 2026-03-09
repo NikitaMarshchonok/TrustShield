@@ -347,6 +347,27 @@ def reports_status() -> dict[str, Any]:
     return {"status": "ok", "reports": status}
 
 
+@app.get("/reports/timestamps")
+def reports_timestamps() -> dict[str, Any]:
+    report_paths = {
+        "monitoring": Path("reports/monitoring.json"),
+        "error_analysis": Path("reports/error_analysis.json"),
+        "policy_simulation": Path("reports/policy_simulation.json"),
+        "cost_report": Path("reports/cost_report.json"),
+    }
+    timestamps: dict[str, Any] = {}
+    for name, path in report_paths.items():
+        if not path.exists():
+            timestamps[name] = {"generated_at_epoch": None, "file_updated_at_epoch": None}
+            continue
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        timestamps[name] = {
+            "generated_at_epoch": payload.get("generated_at_epoch"),
+            "file_updated_at_epoch": int(path.stat().st_mtime),
+        }
+    return {"status": "ok", "reports": timestamps}
+
+
 @app.get("/reports/overview")
 def reports_overview() -> dict[str, Any]:
     metrics_path = Path("reports/metrics.json")

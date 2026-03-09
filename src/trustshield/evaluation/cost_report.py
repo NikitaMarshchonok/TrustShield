@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
 import joblib
@@ -27,6 +28,7 @@ def generate_cost_report(block_threshold: float = 0.75) -> dict:
 
     saved = cost_saved_metric(y_true, y_block, fraud_cost=100.0, review_cost=2.0)
     report = {
+        "generated_at_epoch": int(time.time()),
         "block_threshold": block_threshold,
         "n_samples": int(len(holdout)),
         "blocked_events": int(y_block.sum()),

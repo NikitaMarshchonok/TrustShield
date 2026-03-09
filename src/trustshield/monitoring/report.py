@@ -57,6 +57,7 @@ def generate_monitoring_report() -> dict:
     latency_p95_ms = float(np.percentile(latencies_ms, 95))
 
     report = {
+        "generated_at_epoch": int(time.time()),
         "baseline_score_mean": float(baseline_scores.mean()),
         "recent_score_mean": float(recent_scores.mean()),
         "score_shift_abs": score_shift,

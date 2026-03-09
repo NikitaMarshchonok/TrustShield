@@ -91,6 +91,7 @@ make reports-all
 - `GET /error-analysis/latest` - latest error analysis report
 - `GET /cost/latest` - latest cost-based savings estimate report
 - `GET /reports/status` - availability and update time for all reports
+- `GET /reports/timestamps` - generated-at and file timestamps for report artifacts
 - `GET /reports/overview` - consolidated KPI snapshot across key reports
 - `POST /reports/generate` - generate selected reports on demand
 - `POST /reports/generate/all` - generate full reports bundle with defaults

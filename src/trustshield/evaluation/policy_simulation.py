@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
 from trustshield.ingestion import generate_synthetic_events
@@ -47,6 +48,7 @@ def run_policy_simulation(n_events: int = 1200) -> dict:
             block_true_fraud += 1
 
     report = {
+        "generated_at_epoch": int(time.time()),
         "n_events": n_events,
         "decisions": decisions,
         "review_precision_proxy": round(review_true_fraud / max(decisions["review"], 1), 4),

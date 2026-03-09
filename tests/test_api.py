@@ -126,6 +126,15 @@ def test_reports_status_endpoint() -> None:
     assert "metrics" in body["reports"]
 
 
+def test_reports_timestamps_endpoint() -> None:
+    response = client.get("/reports/timestamps")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert "reports" in body
+    assert "monitoring" in body["reports"]
+
+
 def test_reports_overview_endpoint() -> None:
     response = client.get("/reports/overview")
     assert response.status_code == 200

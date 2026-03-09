@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
 import joblib
@@ -33,6 +34,7 @@ def generate_error_analysis_report(threshold: float = 0.5) -> dict:
     fn = frame[(frame["pred"] == 0) & (truth == 1)].sort_values("score", ascending=True).head(10)
 
     report = {
+        "generated_at_epoch": int(time.time()),
         "threshold": threshold,
         "counts": {
             "false_positives": int(((preds == 1) & (truth == 0)).sum()),
