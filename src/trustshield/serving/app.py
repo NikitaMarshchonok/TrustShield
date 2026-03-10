@@ -368,6 +368,29 @@ def reports_timestamps() -> dict[str, Any]:
     return {"status": "ok", "reports": timestamps}
 
 
+@app.get("/reports/missing")
+def reports_missing() -> dict[str, Any]:
+    report_specs = {
+        "metrics": {"path": Path("reports/metrics.json"), "hint": "make train"},
+        "monitoring": {"path": Path("reports/monitoring.json"), "hint": "make monitor"},
+        "error_analysis": {"path": Path("reports/error_analysis.json"), "hint": "make error-analysis"},
+        "policy_simulation": {"path": Path("reports/policy_simulation.json"), "hint": "make policy-sim"},
+        "cost_report": {"path": Path("reports/cost_report.json"), "hint": "make cost-report"},
+        "dashboard": {"path": Path("reports/dashboard.html"), "hint": "make dashboard"},
+    }
+    missing: list[dict[str, str]] = []
+    for name, spec in report_specs.items():
+        if not spec["path"].exists():
+            missing.append({"report": name, "hint": str(spec["hint"])})
+
+    return {
+        "status": "ok",
+        "all_present": len(missing) == 0,
+        "missing_count": len(missing),
+        "missing": missing,
+    }
+
+
 @app.get("/reports/overview")
 def reports_overview() -> dict[str, Any]:
     metrics_path = Path("reports/metrics.json")

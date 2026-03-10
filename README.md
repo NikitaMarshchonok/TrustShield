@@ -92,6 +92,7 @@ make reports-all
 - `GET /cost/latest` - latest cost-based savings estimate report
 - `GET /reports/status` - availability and update time for all reports
 - `GET /reports/timestamps` - generated-at and file timestamps for report artifacts
+- `GET /reports/missing` - missing reports and exact make commands to generate them
 - `GET /reports/overview` - consolidated KPI snapshot across key reports
 - `POST /reports/generate` - generate selected reports on demand
 - `POST /reports/generate/all` - generate full reports bundle with defaults

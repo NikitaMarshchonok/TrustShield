@@ -135,6 +135,15 @@ def test_reports_timestamps_endpoint() -> None:
     assert "monitoring" in body["reports"]
 
 
+def test_reports_missing_endpoint() -> None:
+    response = client.get("/reports/missing")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert "missing" in body
+    assert "all_present" in body
+
+
 def test_reports_overview_endpoint() -> None:
     response = client.get("/reports/overview")
     assert response.status_code == 200
