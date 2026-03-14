@@ -144,6 +144,15 @@ def test_reports_missing_endpoint() -> None:
     assert "all_present" in body
 
 
+def test_reports_staleness_endpoint() -> None:
+    response = client.get("/reports/staleness")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert "stale_count" in body
+    assert "stale" in body
+
+
 def test_reports_overview_endpoint() -> None:
     response = client.get("/reports/overview")
     assert response.status_code == 200

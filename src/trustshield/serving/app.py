@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 from pathlib import Path
 from typing import Any
 
 import joblib
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse
 
 from trustshield.evaluation.cost_report import generate_cost_report
@@ -388,6 +389,40 @@ def reports_missing() -> dict[str, Any]:
         "all_present": len(missing) == 0,
         "missing_count": len(missing),
         "missing": missing,
+    }
+
+
+@app.get("/reports/staleness")
+def reports_staleness(max_age_minutes: int = Query(default=120, ge=1, le=10_080)) -> dict[str, Any]:
+    report_paths = {
+        "metrics": Path("reports/metrics.json"),
+        "monitoring": Path("reports/monitoring.json"),
+        "error_analysis": Path("reports/error_analysis.json"),
+        "policy_simulation": Path("reports/policy_simulation.json"),
+        "cost_report": Path("reports/cost_report.json"),
+        "dashboard": Path("reports/dashboard.html"),
+    }
+    now = time.time()
+    max_age_seconds = float(max_age_minutes) * 60.0
+
+    stale: list[dict[str, Any]] = []
+    for name, path in report_paths.items():
+        if not path.exists():
+            continue
+        age_seconds = now - path.stat().st_mtime
+        if age_seconds > max_age_seconds:
+            stale.append(
+                {
+                    "report": name,
+                    "age_minutes": round(age_seconds / 60.0, 2),
+                }
+            )
+
+    return {
+        "status": "ok",
+        "max_age_minutes": max_age_minutes,
+        "stale_count": len(stale),
+        "stale": stale,
     }
 
 
