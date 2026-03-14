@@ -82,6 +82,7 @@ make reports-all
 - `GET /serving/stats` - in-memory serving request and decision counters
 - `POST /serving/stats/reset` - reset serving counters (debug/test)
 - `GET /health/ready` - readiness checks for model/policy/artifacts
+- `GET /openapi/tags-summary` - quick summary of API endpoint groups/tags
 - `GET /model/info` - loaded model metadata and latest metrics snapshot
 - `POST /predict` - risk score, reasons, decision, score components
 - `POST /predict/batch` - batch risk scoring for up to 100 events per request

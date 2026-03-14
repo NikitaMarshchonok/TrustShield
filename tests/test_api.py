@@ -33,6 +33,15 @@ def test_health_ready() -> None:
     assert "checks" in body
 
 
+def test_openapi_tags_summary() -> None:
+    response = client.get("/openapi/tags-summary")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert "tags" in body
+    assert "serving" in body["tags"]
+
+
 def test_model_info_endpoint() -> None:
     response = client.get("/model/info")
     assert response.status_code == 200

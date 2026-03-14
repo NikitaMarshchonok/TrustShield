@@ -67,7 +67,7 @@ serving_stats: dict[str, Any] = {
 }
 
 
-@app.get("/health")
+@app.get("/health", tags=["health"])
 def health() -> dict[str, Any]:
     return {
         "status": "ok",
@@ -76,7 +76,7 @@ def health() -> dict[str, Any]:
     }
 
 
-@app.get("/serving/stats")
+@app.get("/serving/stats", tags=["serving"])
 def serving_stats_snapshot() -> dict[str, Any]:
     with serving_stats_lock:
         snapshot = {
@@ -89,7 +89,7 @@ def serving_stats_snapshot() -> dict[str, Any]:
     return {"status": "ok", "stats": snapshot}
 
 
-@app.post("/serving/stats/reset")
+@app.post("/serving/stats/reset", tags=["serving"])
 def serving_stats_reset() -> dict[str, str]:
     with serving_stats_lock:
         serving_stats["total_requests"] = 0
@@ -100,7 +100,7 @@ def serving_stats_reset() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/health/ready")
+@app.get("/health/ready", tags=["health"])
 def health_ready() -> dict[str, Any]:
     checks = {
         "policy_loaded": bool(policy_cfg),
@@ -112,7 +112,23 @@ def health_ready() -> dict[str, Any]:
     return {"status": "ready" if ready else "not_ready", "checks": checks}
 
 
-@app.get("/model/info")
+@app.get("/openapi/tags-summary", tags=["health"])
+def openapi_tags_summary() -> dict[str, Any]:
+    tags_map: dict[str, int] = {}
+    for route in app.routes:
+        if not hasattr(route, "tags"):
+            continue
+        route_tags = getattr(route, "tags", None) or []
+        for tag in route_tags:
+            tags_map[str(tag)] = tags_map.get(str(tag), 0) + 1
+    return {
+        "status": "ok",
+        "tags_count": len(tags_map),
+        "tags": {k: tags_map[k] for k in sorted(tags_map.keys())},
+    }
+
+
+@app.get("/model/info", tags=["model"])
 def model_info() -> dict[str, Any]:
     artifact_path = Path("reports/artifacts/model_bundle.joblib")
     if bundle is None:
@@ -132,7 +148,7 @@ def model_info() -> dict[str, Any]:
     }
 
 
-@app.get("/monitoring/summary")
+@app.get("/monitoring/summary", tags=["monitoring"])
 def monitoring_summary() -> dict[str, Any]:
     report_path = Path("reports/monitoring.json")
     if not report_path.exists():
@@ -140,7 +156,7 @@ def monitoring_summary() -> dict[str, Any]:
     return {"status": "ok", "report": json.loads(report_path.read_text(encoding="utf-8"))}
 
 
-@app.get("/latency/latest")
+@app.get("/latency/latest", tags=["monitoring"])
 def latency_latest() -> dict[str, Any]:
     report_path = Path("reports/monitoring.json")
     if not report_path.exists():
@@ -161,7 +177,7 @@ def latency_latest() -> dict[str, Any]:
     }
 
 
-@app.get("/alerts/latest")
+@app.get("/alerts/latest", tags=["monitoring"])
 def alerts_latest() -> dict[str, Any]:
     report_path = Path("reports/monitoring.json")
     if not report_path.exists():
@@ -200,7 +216,7 @@ def alerts_latest() -> dict[str, Any]:
     }
 
 
-@app.get("/quality/latest")
+@app.get("/quality/latest", tags=["monitoring"])
 def quality_latest() -> dict[str, Any]:
     report_path = Path("reports/monitoring.json")
     if not report_path.exists():
@@ -225,7 +241,7 @@ def quality_latest() -> dict[str, Any]:
     }
 
 
-@app.get("/drift/latest")
+@app.get("/drift/latest", tags=["monitoring"])
 def drift_latest() -> dict[str, Any]:
     report_path = Path("reports/monitoring.json")
     if not report_path.exists():
@@ -248,7 +264,7 @@ def drift_latest() -> dict[str, Any]:
     }
 
 
-@app.get("/decision-mix/latest")
+@app.get("/decision-mix/latest", tags=["policy"])
 def decision_mix_latest() -> dict[str, Any]:
     report_path = Path("reports/policy_simulation.json")
     if not report_path.exists():
@@ -278,7 +294,7 @@ def decision_mix_latest() -> dict[str, Any]:
     }
 
 
-@app.get("/policy/triggers/latest")
+@app.get("/policy/triggers/latest", tags=["policy"])
 def policy_triggers_latest() -> dict[str, Any]:
     report_path = Path("reports/policy_simulation.json")
     if not report_path.exists():
@@ -297,7 +313,7 @@ def policy_triggers_latest() -> dict[str, Any]:
     return {"status": "ok", "top_policy_triggers": normalized}
 
 
-@app.get("/cost/latest")
+@app.get("/cost/latest", tags=["reports"])
 def cost_latest() -> dict[str, Any]:
     report_path = Path("reports/cost_report.json")
     if not report_path.exists():
@@ -305,7 +321,7 @@ def cost_latest() -> dict[str, Any]:
     return {"status": "ok", "report": json.loads(report_path.read_text(encoding="utf-8"))}
 
 
-@app.get("/metrics/latest")
+@app.get("/metrics/latest", tags=["model"])
 def metrics_latest() -> dict[str, Any]:
     metrics_path = Path("reports/metrics.json")
     if not metrics_path.exists():
@@ -313,7 +329,7 @@ def metrics_latest() -> dict[str, Any]:
     return {"status": "ok", "metrics": json.loads(metrics_path.read_text(encoding="utf-8"))}
 
 
-@app.get("/policy/simulation/latest")
+@app.get("/policy/simulation/latest", tags=["policy"])
 def policy_simulation_latest() -> dict[str, Any]:
     report_path = Path("reports/policy_simulation.json")
     if not report_path.exists():
@@ -321,7 +337,7 @@ def policy_simulation_latest() -> dict[str, Any]:
     return {"status": "ok", "report": json.loads(report_path.read_text(encoding="utf-8"))}
 
 
-@app.get("/error-analysis/latest")
+@app.get("/error-analysis/latest", tags=["reports"])
 def error_analysis_latest() -> dict[str, Any]:
     report_path = Path("reports/error_analysis.json")
     if not report_path.exists():
@@ -329,7 +345,7 @@ def error_analysis_latest() -> dict[str, Any]:
     return {"status": "ok", "report": json.loads(report_path.read_text(encoding="utf-8"))}
 
 
-@app.get("/reports/status")
+@app.get("/reports/status", tags=["reports"])
 def reports_status() -> dict[str, Any]:
     paths = {
         "metrics": Path("reports/metrics.json"),
@@ -348,7 +364,7 @@ def reports_status() -> dict[str, Any]:
     return {"status": "ok", "reports": status}
 
 
-@app.get("/reports/timestamps")
+@app.get("/reports/timestamps", tags=["reports"])
 def reports_timestamps() -> dict[str, Any]:
     report_paths = {
         "monitoring": Path("reports/monitoring.json"),
@@ -369,7 +385,7 @@ def reports_timestamps() -> dict[str, Any]:
     return {"status": "ok", "reports": timestamps}
 
 
-@app.get("/reports/missing")
+@app.get("/reports/missing", tags=["reports"])
 def reports_missing() -> dict[str, Any]:
     report_specs = {
         "metrics": {"path": Path("reports/metrics.json"), "hint": "make train"},
@@ -392,7 +408,7 @@ def reports_missing() -> dict[str, Any]:
     }
 
 
-@app.get("/reports/staleness")
+@app.get("/reports/staleness", tags=["reports"])
 def reports_staleness(max_age_minutes: int = Query(default=120, ge=1, le=10_080)) -> dict[str, Any]:
     report_paths = {
         "metrics": Path("reports/metrics.json"),
@@ -426,7 +442,7 @@ def reports_staleness(max_age_minutes: int = Query(default=120, ge=1, le=10_080)
     }
 
 
-@app.get("/reports/overview")
+@app.get("/reports/overview", tags=["reports"])
 def reports_overview() -> dict[str, Any]:
     metrics_path = Path("reports/metrics.json")
     monitoring_path = Path("reports/monitoring.json")
@@ -465,7 +481,7 @@ def reports_overview() -> dict[str, Any]:
     return overview
 
 
-@app.post("/reports/generate")
+@app.post("/reports/generate", tags=["reports"])
 def reports_generate(req: ReportsGenerateRequest) -> dict[str, Any]:
     results: dict[str, dict[str, Any]] = {}
 
@@ -515,7 +531,7 @@ def reports_generate(req: ReportsGenerateRequest) -> dict[str, Any]:
     return {"status": "ok" if all_ok else "partial", "results": results}
 
 
-@app.post("/reports/generate/all")
+@app.post("/reports/generate/all", tags=["reports"])
 def reports_generate_all() -> dict[str, Any]:
     return reports_generate(
         ReportsGenerateRequest(
@@ -528,7 +544,7 @@ def reports_generate_all() -> dict[str, Any]:
     )
 
 
-@app.get("/monitoring/dashboard", response_class=HTMLResponse)
+@app.get("/monitoring/dashboard", response_class=HTMLResponse, tags=["monitoring"])
 def monitoring_dashboard() -> HTMLResponse:
     dashboard_path = Path("reports/dashboard.html")
     if not dashboard_path.exists():
@@ -539,18 +555,18 @@ def monitoring_dashboard() -> HTMLResponse:
     return HTMLResponse(content=dashboard_path.read_text(encoding="utf-8"), status_code=200)
 
 
-@app.post("/policy/reset")
+@app.post("/policy/reset", tags=["policy"])
 def policy_reset() -> dict[str, str]:
     reset_policy_state(policy_runtime_state)
     return {"status": "ok"}
 
 
-@app.get("/policy/state")
+@app.get("/policy/state", tags=["policy"])
 def policy_state_snapshot() -> dict[str, Any]:
     return {"status": "ok", "state": policy_state_summary(policy_runtime_state)}
 
 
-@app.get("/policy/config")
+@app.get("/policy/config", tags=["policy"])
 def policy_config() -> dict[str, Any]:
     return {
         "status": "ok",
@@ -561,7 +577,7 @@ def policy_config() -> dict[str, Any]:
     }
 
 
-@app.post("/predict", response_model=PredictResponse)
+@app.post("/predict", response_model=PredictResponse, tags=["serving"])
 def predict(req: PredictRequest) -> PredictResponse:
     payload = req.model_dump()
     if bundle is not None:
@@ -600,7 +616,7 @@ def predict(req: PredictRequest) -> PredictResponse:
     )
 
 
-@app.post("/predict/batch", response_model=BatchPredictResponse)
+@app.post("/predict/batch", response_model=BatchPredictResponse, tags=["serving"])
 def predict_batch(req: BatchPredictRequest) -> BatchPredictResponse:
     with serving_stats_lock:
         serving_stats["total_requests"] += 1
@@ -609,6 +625,6 @@ def predict_batch(req: BatchPredictRequest) -> BatchPredictResponse:
     return BatchPredictResponse(items=results)
 
 
-@app.post("/explain", response_model=PredictResponse)
+@app.post("/explain", response_model=PredictResponse, tags=["serving"])
 def explain(req: PredictRequest) -> PredictResponse:
     return predict(req)
