@@ -167,6 +167,7 @@ def model_info() -> dict[str, Any]:
     return {
         "status": "ok",
         "model_loaded": True,
+        "model_version": str(bundle.get("model_version", "unknown")),
         "artifact_updated_at_epoch": int(artifact_path.stat().st_mtime) if artifact_path.exists() else None,
         "ensemble_weights": bundle.get("ensemble_weights", {}),
         "metrics": metrics,
@@ -610,6 +611,7 @@ def predict(req: PredictRequest) -> PredictResponse:
     payload = req.model_dump()
     if bundle is not None:
         model_output = explain_event(bundle, payload)
+        model_version = str(model_output.get("model_version", "unknown"))
         score = model_output["risk_score"]
         model_reasons = model_output["model_reasons"]
         feature_contributions = model_output["feature_contributions"]
@@ -621,6 +623,7 @@ def predict(req: PredictRequest) -> PredictResponse:
             "graph_max_entity_pagerank": round(float(model_output["graph_max_entity_pagerank"]), 8),
         }
     else:
+        model_version = "fallback-heuristic"
         score = fallback.predict(payload)
         model_reasons = []
         feature_contributions = {}
@@ -637,6 +640,7 @@ def predict(req: PredictRequest) -> PredictResponse:
         if len(serving_stats["latency_ms_window"]) > LATENCY_WINDOW_SIZE:
             serving_stats["latency_ms_window"] = serving_stats["latency_ms_window"][-LATENCY_WINDOW_SIZE:]
     return PredictResponse(
+        model_version=model_version,
         risk_score=round(score, 4),
         decision=decision,
         reasons=reasons,

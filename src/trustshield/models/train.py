@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 import joblib
@@ -130,6 +131,7 @@ def train() -> dict:
 
     artifact_path = Path(cfg["output"]["artifact_path"])
     artifact_path.parent.mkdir(parents=True, exist_ok=True)
+    model_version = f"ts-{int(time.time())}"
 
     ngram_names = np.array(text_vectorizer.get_feature_names_out())
     text_coef = text_model.coef_[0]
@@ -145,6 +147,7 @@ def train() -> dict:
         "ensemble_weights": ensemble_weights,
         "top_ngrams": top_ngrams,
         "tabular_feature_names": tabular_feature_names,
+        "model_version": model_version,
         "metrics": {
             "pr_auc": float(pr_auc),
             "recall_at_precision_0_90": float(recall_at_90p),

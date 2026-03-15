@@ -56,6 +56,7 @@ def explain_event(model_bundle: dict[str, Any], payload: dict[str, Any]) -> dict
     weights = model_bundle["ensemble_weights"]
     top_ngrams = set(model_bundle.get("top_ngrams", []))
     tabular_feature_names = model_bundle.get("tabular_feature_names", [])
+    model_version = str(model_bundle.get("model_version", "unknown"))
 
     text = normalize_text(str(payload.get("message_text", "")))
     country = str(payload.get("country", "UNK")).upper()
@@ -108,6 +109,7 @@ def explain_event(model_bundle: dict[str, Any], payload: dict[str, Any]) -> dict
         )
 
     return {
+        "model_version": model_version,
         "risk_score": risk_score,
         "text_score": text_score,
         "tabular_score": tabular_score,

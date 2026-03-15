@@ -85,7 +85,7 @@ make reports-all
 - `GET /health/ready` - readiness checks for model/policy/artifacts
 - `GET /openapi/tags-summary` - quick summary of API endpoint groups/tags
 - `GET /model/info` - loaded model metadata and latest metrics snapshot
-- `POST /predict` - risk score, reasons, decision, score components
+- `POST /predict` - model version, risk score, reasons, decision, score components
 - `POST /predict/batch` - batch risk scoring for up to 100 events per request
 - `POST /explain` - explanation-focused output with top feature contributions and method
 - `GET /metrics/latest` - latest training metrics snapshot

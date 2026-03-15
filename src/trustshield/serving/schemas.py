@@ -19,6 +19,7 @@ class PredictRequest(BaseModel):
 
 
 class PredictResponse(BaseModel):
+    model_version: str = Field(default="unknown")
     risk_score: float
     decision: str
     reasons: list[str]

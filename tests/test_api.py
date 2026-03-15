@@ -57,6 +57,8 @@ def test_model_info_endpoint() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["status"] in {"ok", "missing"}
+    if body["status"] == "ok":
+        assert "model_version" in body
 
 
 def test_monitoring_summary_missing_report() -> None:
@@ -255,6 +257,7 @@ def test_predict() -> None:
     assert isinstance(body["feature_contributions"], dict)
     assert isinstance(body["policy_triggers"], list)
     assert body["explanation_method"] in {"shap", "linear_coef", "fallback", "none"}
+    assert isinstance(body["model_version"], str)
 
     stats_response = client.get("/serving/stats")
     assert stats_response.status_code == 200
@@ -296,6 +299,7 @@ def test_predict_batch() -> None:
     assert "items" in body
     assert len(body["items"]) == 2
     assert all("risk_score" in item for item in body["items"])
+    assert all("model_version" in item for item in body["items"])
 
 
 def test_explain() -> None:
