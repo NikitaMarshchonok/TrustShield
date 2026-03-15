@@ -25,6 +25,16 @@ def test_serving_stats_endpoints() -> None:
     assert body["stats"]["predict_requests"] == 0
 
 
+def test_serving_latency_endpoint() -> None:
+    reset_response = client.post("/serving/stats/reset")
+    assert reset_response.status_code == 200
+    response = client.get("/serving/latency")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert "p95_ms" in body
+
+
 def test_health_ready() -> None:
     response = client.get("/health/ready")
     assert response.status_code == 200

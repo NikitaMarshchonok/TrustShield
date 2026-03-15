@@ -64,7 +64,9 @@ serving_stats: dict[str, Any] = {
     "batch_requests": 0,
     "predicted_items": 0,
     "decision_counts": {"allow": 0, "review": 0, "block": 0},
+    "latency_ms_window": [],
 }
+LATENCY_WINDOW_SIZE = 500
 
 
 @app.get("/health", tags=["health"])
@@ -89,6 +91,30 @@ def serving_stats_snapshot() -> dict[str, Any]:
     return {"status": "ok", "stats": snapshot}
 
 
+def _percentile(values: list[float], q: float) -> float:
+    if not values:
+        return 0.0
+    sorted_values = sorted(values)
+    pos = int(round((len(sorted_values) - 1) * q))
+    pos = max(0, min(pos, len(sorted_values) - 1))
+    return float(sorted_values[pos])
+
+
+@app.get("/serving/latency", tags=["serving"])
+def serving_latency_snapshot() -> dict[str, Any]:
+    with serving_stats_lock:
+        values = list(serving_stats["latency_ms_window"])
+    if not values:
+        return {"status": "ok", "count": 0, "p50_ms": 0.0, "p95_ms": 0.0, "latest_ms": 0.0}
+    return {
+        "status": "ok",
+        "count": len(values),
+        "p50_ms": round(_percentile(values, 0.50), 4),
+        "p95_ms": round(_percentile(values, 0.95), 4),
+        "latest_ms": round(float(values[-1]), 4),
+    }
+
+
 @app.post("/serving/stats/reset", tags=["serving"])
 def serving_stats_reset() -> dict[str, str]:
     with serving_stats_lock:
@@ -97,6 +123,7 @@ def serving_stats_reset() -> dict[str, str]:
         serving_stats["batch_requests"] = 0
         serving_stats["predicted_items"] = 0
         serving_stats["decision_counts"] = {"allow": 0, "review": 0, "block": 0}
+        serving_stats["latency_ms_window"] = []
     return {"status": "ok"}
 
 
@@ -579,6 +606,7 @@ def policy_config() -> dict[str, Any]:
 
 @app.post("/predict", response_model=PredictResponse, tags=["serving"])
 def predict(req: PredictRequest) -> PredictResponse:
+    started_at = time.perf_counter()
     payload = req.model_dump()
     if bundle is not None:
         model_output = explain_event(bundle, payload)
@@ -604,6 +632,10 @@ def predict(req: PredictRequest) -> PredictResponse:
         serving_stats["predict_requests"] += 1
         serving_stats["predicted_items"] += 1
         serving_stats["decision_counts"][decision] = serving_stats["decision_counts"].get(decision, 0) + 1
+        elapsed_ms = (time.perf_counter() - started_at) * 1000.0
+        serving_stats["latency_ms_window"].append(float(elapsed_ms))
+        if len(serving_stats["latency_ms_window"]) > LATENCY_WINDOW_SIZE:
+            serving_stats["latency_ms_window"] = serving_stats["latency_ms_window"][-LATENCY_WINDOW_SIZE:]
     return PredictResponse(
         risk_score=round(score, 4),
         decision=decision,

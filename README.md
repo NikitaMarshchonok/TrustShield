@@ -80,6 +80,7 @@ make reports-all
 
 - `GET /health` - service health and model loading status
 - `GET /serving/stats` - in-memory serving request and decision counters
+- `GET /serving/latency` - in-memory latency p50/p95 over recent predictions
 - `POST /serving/stats/reset` - reset serving counters (debug/test)
 - `GET /health/ready` - readiness checks for model/policy/artifacts
 - `GET /openapi/tags-summary` - quick summary of API endpoint groups/tags
